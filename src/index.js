@@ -27,32 +27,10 @@ const main = async () => {
   // Open Wallet and connect to Lorena
   const wallet = new Wallet(username)
   const lorena = new Lorena(wallet, { debug: true, silent: true })
-  term.gray('\nConnecting...')
-  // get basic configuration
-  const conf = await lorena.unlock(password)
-  if (conf === false) {
-    // First Time.
-    term.cyan('Creating new connection')
-    term.gray('\nConnection String :')
-    const connString = await term.inputField().promise
-    // const connString = 'Ygg7QhoNdbPmP1UTqnl22w-#-NDM2ZjZlNmU2NTYzNzQ2OTZmNmUyMDUzNzQ3MjY5NmU2Nw-#-jWDo3rHGqwMn3jnfRbBtNLmdsaC2UMzyura2dySL4Os-#-OKESp6vasShke5HVunTL5POsfEAyK33QnCDqzDGJKXFp_INhqkBaKM8i6ftlg1deyoZq6MMIaQUIZuEsFFjMNMGpRmYgtnOIKXFsJ9GhZ5kiV775EfeeXnwoh7o'
-
-    term.gray('\nPIN :')
-    const pin = await term.inputField().promise
-    // const pin = '223447'
-    term.cyan('\nOpen connection')
-    await lorena.newClient(connString, pin, username)
-
-    // Connect
-    await lorena.connect()
-
-    // Do the handshake with the server
-    term.cyan('\nHandshake : get DID')
-    await lorena.handshake()
-
-    // Save config.
-    term.cyan('\nSave config & connect...')
-    await lorena.lock(password)
+  if (await lorena.unlock(password)) {
+    term.gray('\nWallet open\n')
+    lorena.connect()
+    terminal(lorena, wallet)
   } else {
     // No wallet.
     term.gray('\nA Wallet for ' + username + ' Does not exist')
