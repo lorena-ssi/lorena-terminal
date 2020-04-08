@@ -3,7 +3,6 @@ const term = require('terminal-kit').terminal
 const Lorena = require('../src/index').default
 const Wallet = require('@lorena-ssi/wallet-lib').default
 
-let threadId = 0
 let connected = false
 let username = ''
 let password = ''
@@ -14,6 +13,7 @@ term.on('key', function (name, matches, data) {
     setTimeout(function () { process.exit() }, 100)
   }
 })
+
 term.magenta('Lorena ^+Client^\n')
 
 // Main.
@@ -27,10 +27,32 @@ const main = async () => {
   // Open Wallet and connect to Lorena
   const wallet = new Wallet(username)
   const lorena = new Lorena(wallet, { debug: true, silent: true })
-  if (await lorena.unlock(password)) {
-    term.gray('\nWallet open\n')
-    lorena.connect()
-    terminal(lorena, wallet)
+  term.gray('\nConnecting...')
+  // get basic configuration
+  const conf = await lorena.unlock(password)
+  if (conf === false) {
+    // First Time.
+    term.cyan('Creating new connection')
+    term.gray('\nConnection String :')
+    const connString = await term.inputField().promise
+    // const connString = 'Ygg7QhoNdbPmP1UTqnl22w-#-NDM2ZjZlNmU2NTYzNzQ2OTZmNmUyMDUzNzQ3MjY5NmU2Nw-#-jWDo3rHGqwMn3jnfRbBtNLmdsaC2UMzyura2dySL4Os-#-OKESp6vasShke5HVunTL5POsfEAyK33QnCDqzDGJKXFp_INhqkBaKM8i6ftlg1deyoZq6MMIaQUIZuEsFFjMNMGpRmYgtnOIKXFsJ9GhZ5kiV775EfeeXnwoh7o'
+
+    term.gray('\nPIN :')
+    const pin = await term.inputField().promise
+    // const pin = '223447'
+    term.cyan('\nOpen connection')
+    await lorena.newClient(connString, pin, username)
+
+    // Connect
+    await lorena.connect()
+
+    // Do the handshake with the server
+    term.cyan('\nHandshake : get DID')
+    await lorena.handshake()
+
+    // Save config.
+    term.cyan('\nSave config & connect...')
+    await lorena.lock(password)
   } else {
     // No wallet.
     term.gray('\nA Wallet for ' + username + ' Does not exist')
@@ -48,7 +70,7 @@ const main = async () => {
     }
   }
 
-  // Listem to Lorena messages.
+  // Listen to Lorena messages.
   lorena.on('error', (e) => {
     term('ERROR!!', e)
   })
@@ -103,10 +125,7 @@ const main = async () => {
 const callRecipe = async (lorena, recipe, payload = {}) => {
   return new Promise((resolve, reject) => {
     term.gray(recipe + '...')
-    lorena.sendAction(recipe, 0, recipe, threadId++, payload)
-      .then(() => {
-        return lorena.oneMsg('message:' + recipe)
-      })
+    lorena.callRecipe(recipe, payload)
       .then((result) => {
         const total = (Array.isArray(result.payload) ? result.payload.length : 1)
         term('^+done^ - ' + total + ' results\n')
@@ -167,7 +186,7 @@ const terminal = async (lorena, wallet) => {
         // Do the handshake with the server
         term.cyan('\nHandshake : add contact')
         term.cyan('\n')
-        // await lorena.handshake(threadId++)
+        // await lorena.handshake()
         term.cyan('\nUpdating Storage...\n')
         await lorena.lock(password)
         break
@@ -220,7 +239,7 @@ const terminal = async (lorena, wallet) => {
         break
       case 'contact-handshake':
         term.gray('handshake...')
-        await lorena.handshake(threadId++)
+        await lorena.handshake()
         term('^+done^\n')
         break
       case 'contact-add':
@@ -239,7 +258,7 @@ const terminal = async (lorena, wallet) => {
         // term.gray('\nCredential (memberOf) : ')
         // payload.credential = await term.inputField().promise
         term.gray('\n')
-        await lorena.askCredential(payload.roomId, 'memberOf', threadId++)
+        await lorena.askCredential(payload.roomId, 'memberOf')
         break
       case 'contact-del':
         payload = {}
