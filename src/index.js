@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 const term = require('terminal-kit').terminal
-const Lorena = require('@lorena-ssi/lorena-cli').default
+const Lorena = require('@lorena-ssi/lorena-sdk').default
 const Wallet = require('@lorena-ssi/wallet-lib').default
 
 let connected = false
