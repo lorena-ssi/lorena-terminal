@@ -2,6 +2,7 @@
 const term = require('terminal-kit').terminal
 const Lorena = require('@lorena-ssi/lorena-sdk').default
 const Wallet = require('@lorena-ssi/wallet-lib').default
+const Credential = require('@lorena-ssi/credential-lib')
 
 let connected = false
 let username = ''
@@ -30,16 +31,44 @@ const main = async () => {
   if (await lorena.unlock(password)) {
     term.gray('\nWallet open\n')
     lorena.connect()
-    terminal(lorena, wallet)
   } else {
     // No wallet.
     term.gray('\nA Wallet for ' + username + ' Does not exist')
-    term('\nCreate One (Y/N)\n')
+    term('\nCreate One (Y/n)\n')
     if (await term.yesOrNo({ yes: ['y', 'ENTER'], no: ['n'] }).promise) {
       // Save config.
 
-      await lorena.addKeyPair()
-      term.cyan('\nKey Pair Added')
+      await lorena.initWallet('labtest')
+      term.cyan('\nKey Pair + DID Added')
+
+      // Personal information
+      const person = new Credential.Person(wallet.info.did)
+      const user = {}
+      term.gray('\nFirst Name :')
+      user.givenName = await term.inputField().promise
+      term.gray('\nLast Name (1) :')
+      user.familyName = await term.inputField().promise
+      term.gray('\nLast Name (2) :')
+      user.additionalName = await term.inputField().promise
+      person.fullName(user.givenName, user.familyName, user.additionalName)
+      term.gray('\nDNI :')
+      person.nationalID(await term.inputField().promise, 'Documento Nacional de Identidad de España')
+      term.gray('\nPhone number :')
+      person.telephone(await term.inputField().promise)
+      term.gray('\nEmail :')
+      person.email(await term.inputField().promise)
+
+      // Location.
+      const location = new Credential.Location()
+      term.gray('\nCity/Town :')
+      location.addressLocality(await term.inputField().promise)
+      term.gray('\nPostal Code :')
+      location.postalCode(await term.inputField().promise)
+      term.gray('\nNeighborhood :')
+      location.neighborhood(await term.inputField().promise)
+      person.location(location)
+
+      await lorena.signCredential(person)
       term.cyan('\nSave Storage\n\n')
       await lorena.lock(password)
       terminal(lorena, wallet)
@@ -55,6 +84,7 @@ const main = async () => {
   lorena.on('ready', async () => {
     term('^+connected^\n')
     connected = true
+    terminal(lorena, wallet)
   })
 
   // Someone's asking for a credential we have.
@@ -125,13 +155,13 @@ const callRecipe = async (lorena, recipe, payload = {}) => {
 const terminal = async (lorena, wallet) => {
   let list, payload
   const history = []
-  const autoComplete = ['help', 'info', 'new-did', 'credential', 'credential-member', 'contacts', 'pubkey', 'ping', 'ping-remote', 'contact-invite', 'contact-list', 'contact-add', 'contact-info', 'action-issue', 'exit']
+  const autoComplete = ['help', 'info', 'member-of', 'credential', 'credential-member', 'contacts', 'pubkey', 'ping', 'ping-remote', 'contact-invite', 'contact-list', 'contact-add', 'contact-info', 'action-issue', 'exit']
 
   term.cyan('lorena# ')
   const input = await term.inputField({ history: history, autoComplete: autoComplete, autoCompleteMenu: true }).promise
   term('\n')
 
-  if (connected === false & ['did', 'ping', 'ping-remote', 'contact-invite', 'contact-list', 'contact-add', 'contact-info', 'action-issue'].includes(input)) {
+  if (connected === false & ['ping', 'ping-remote', 'contact-invite', 'contact-list', 'contact-add', 'contact-info', 'action-issue'].includes(input)) {
     term('You are not connected\n')
   } else {
     switch (input) {
@@ -145,7 +175,7 @@ const terminal = async (lorena, wallet) => {
         break
       case 'did':
         term.gray('DID :\n')
-        console.log(wallet.info.didBase + wallet.info.didMethod + ':' + wallet.info.did)
+        console.log(wallet.info.did)
         break
       case 'new-did':
         payload = {}
@@ -228,6 +258,18 @@ const terminal = async (lorena, wallet) => {
         payload.matrix = await term.inputField().promise
         term.gray('\n')
         await lorena.createConnection(payload.matrix, payload.did)
+        break
+      case 'member-of':
+        payload = {}
+        // Extra
+        term.gray('RoomID : ')
+        payload.roomId = await term.inputField().promise
+        term.gray('\nExtra :')
+        payload.extra = await term.inputField().promise
+        term.gray('\nRolename :')
+        payload.roleName = await term.inputField().promise
+        term.gray('\n')
+        await lorena.memberOf(payload.roomId, payload.roleName, payload.extra)
         break
       case 'credential-get':
         payload = {}

@@ -1,6 +1,6 @@
 {
   "name": "@lorena-ssi/terminal",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Lorena Terminal",
   "author": "Alex Puig <alex@caelumlabs.com>",
   "license": "MIT",
@@ -24,7 +24,7 @@
   },
   "homepage": "https://github.com/lorena-ssi/terminal#readme",
   "dependencies": {
-    "@lorena-ssi/lorena-sdk": "^1.0.0",
+    "@lorena-ssi/lorena-sdk": "^1.0.1",
     "inquirer": "^7.1.0",
     "terminal-kit": "^1.35.2"
   },
