@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 const term = require('terminal-kit').terminal
+
 const Lorena = require('@lorena-ssi/lorena-sdk').default
 const Wallet = require('@lorena-ssi/wallet-lib').default
-const Credential = require('@lorena-ssi/credential-lib')
+const createWallet = require('./createWallet')
 
-let connected = false
 let username = ''
 let password = ''
 
@@ -15,10 +15,9 @@ term.on('key', function (name, matches, data) {
   }
 })
 
-term.magenta('Lorena ^+Client^\n')
-
 // Main.
 const main = async () => {
+  term.magenta('Lorena ^+Client^\n')
   // Username & password.
   term.gray('\nUsername :')
   username = await term.inputField().promise
@@ -30,48 +29,13 @@ const main = async () => {
   const lorena = new Lorena(wallet, { debug: true, silent: true })
   if (await lorena.unlock(password)) {
     term.gray('\nWallet open\n')
-    lorena.connect()
+    await lorena.connect()
   } else {
     // No wallet.
-    term.gray('\nA Wallet for ' + username + ' Does not exist')
-    term('\nCreate One (Y/n)\n')
+    term.gray('\nA Wallet for ' + username + ' Does not exist').white('\nCreate One (Y/n)\n')
     if (await term.yesOrNo({ yes: ['y', 'ENTER'], no: ['n'] }).promise) {
-      // Save config.
-
-      await lorena.initWallet('labtest')
-      term.cyan('\nKey Pair + DID Added')
-
-      // Personal information
-      const person = new Credential.Person(wallet.info.did)
-      const user = {}
-      term.gray('\nFirst Name :')
-      user.givenName = await term.inputField().promise
-      term.gray('\nLast Name (1) :')
-      user.familyName = await term.inputField().promise
-      term.gray('\nLast Name (2) :')
-      user.additionalName = await term.inputField().promise
-      person.fullName(user.givenName, user.familyName, user.additionalName)
-      term.gray('\nDNI :')
-      person.nationalID(await term.inputField().promise, 'Documento Nacional de Identidad de España')
-      term.gray('\nPhone number :')
-      person.telephone(await term.inputField().promise)
-      term.gray('\nEmail :')
-      person.email(await term.inputField().promise)
-
-      // Location.
-      const location = new Credential.Location()
-      term.gray('\nCity/Town :')
-      location.addressLocality(await term.inputField().promise)
-      term.gray('\nPostal Code :')
-      location.postalCode(await term.inputField().promise)
-      term.gray('\nNeighborhood :')
-      location.neighborhood(await term.inputField().promise)
-      person.location(location)
-
-      await lorena.signCredential(person)
-      term.cyan('\nSave Storage\n\n')
-      await lorena.lock(password)
-      terminal(lorena, wallet)
+      await createWallet(lorena, wallet, password)
+      await lorena.connect()
     } else {
       process.exit()
     }
@@ -83,7 +47,6 @@ const main = async () => {
   })
   lorena.on('ready', async () => {
     term('^+connected^\n')
-    connected = true
     terminal(lorena, wallet)
   })
 
@@ -129,21 +92,80 @@ const main = async () => {
  * @param {object} lorena Lorena Object
  * @param {string} recipe Recipe Ref to be called
  * @param {object} payload Payload
+ * @param {string} roomId roomId
+ * @param {number} threadId recipe identifier
+ * @returns {Promise} result of calling recipe
  */
-const callRecipe = async (lorena, recipe, payload = {}) => {
-  return new Promise((resolve, reject) => {
-    term.gray(recipe + '...')
-    lorena.callRecipe(recipe, payload)
-      .then((result) => {
-        const total = (Array.isArray(result.payload) ? result.payload.length : 1)
-        term('^+done^ - ' + total + ' results\n')
-        resolve(result.payload)
-      })
-      .catch((error) => {
-        term.gray(`^+${error.message}^\n`)
-        resolve(false)
+const callRecipe = (lorena, recipe, payload = {}, roomId = false, threadId = 0) => {
+  return new Promise((resolve) => {
+    const promise = (roomId === false) ? term.gray('\nRoomId : ').inputField().promise : Promise.resolve(roomId)
+    promise
+      .then((roomId) => { return lorena.getContact(roomId) })
+      .then((room) => {
+        if (room !== false) {
+          term.gray('\n' + recipe + '...')
+          lorena.callRecipe(recipe, payload, room.roomId, threadId)
+            .then((result) => {
+              const total = (Array.isArray(result.payload) ? result.payload.length : 1)
+              term('^+done^ - ' + total + ' results\n')
+              resolve({ roomId: room.roomId, payload: result.payload, threadId: result.threadId })
+            })
+            .catch((error) => {
+              term.gray(`^+${error.message}^\n`)
+              resolve(false)
+            })
+        } else resolve({ payload: ' - room not found\n' })
       })
   })
+}
+
+const runCommand = async (command, autoComplete, lorena, wallet) => {
+  term('\n')
+  const commands = {
+    help: () => console.log(autoComplete),
+    info: () => console.log(wallet.info),
+    did: () => term.gray('DID : ').white(wallet.info.did + '\n'),
+    credential: () => console.log(wallet.data.credentials['0'] ? wallet.data.credentials['0'] : 'empty'),
+    credentials: () => console.log(wallet.data.credentials ? wallet.data.credentials : 'empty'),
+    'credential-member': () => console.log(wallet.data.credentials['0'] ? wallet.data.credentials['0'].credentialSubject.member : 'empty'),
+    rooms: () => console.log(wallet.data.contacts),
+    room: async () => {
+      const roomId = await term.gray('\nroomId : ').inputField().promise
+      const room = await wallet.get('contacts', { roomId: roomId })
+      console.log(room)
+    },
+    pubkey: () => term.gray('Public Key :  : ').white(wallet.info.keyPair[wallet.info.username].keypair.public_key + '\n'),
+    'room-add': async () => {
+      const did = await term.gray('DID : ').inputField().promise
+      const matrix = await term.gray('\nmatrix : ').inputField().promise
+      const created = await lorena.createConnection(matrix, did)
+      term('\n' + (created ? 'Successfull' : 'Error') + '\n')
+    },
+    'member-of': async () => { await lorena.memberOf(await term.gray('\nroomId : ').inputField().promise, await term.gray('\nExtra : ').inputField().promise, await term.gray('\nRolename : ').inputField().promise) },
+    'member-of-confirm': async () => { term(await lorena.memberOfConfirm(await term.gray('\nroomId : ').inputField().promise, await term.gray('\nSecret code : ').inputField().promise)) },
+    'member-list': async () => { console.log((await callRecipe(lorena, 'member-list', { filter: 'all' })).payload) },
+    ping: async () => { console.log((await callRecipe(lorena, 'ping')).payload) },
+    'ping-admin': async () => { console.log((await callRecipe(lorena, 'ping-admin')).payload) },
+    q: async () => {
+      if (lorena.wallet.changed === true) {
+        term.gray('\nChanges to the conf file\npassword : ')
+        await lorena.lock(await term.inputField().promise)
+      }
+      term('\n^+Good bye!^\n\n')
+      process.exit()
+    },
+    default: () => term.gray('Command "' + command + '" does not exist. For help type "help"\n')
+  }
+
+  // return new Promise((resolve) => {
+  // invoke it
+  if (commands[command]) {
+    await commands[command]()
+  } else {
+    await commands.default()
+  }
+  // resolve()
+  // })
 }
 
 /**
@@ -152,124 +174,25 @@ const callRecipe = async (lorena, recipe, payload = {}) => {
  * @param {object} lorena Lorena Object
  * @param {object} wallet Local information (wallet)
  */
-const terminal = async (lorena, wallet) => {
-  let list, payload
+function terminal (lorena, wallet) {
   const history = []
-  const autoComplete = ['help', 'info', 'member-of', 'credential', 'credential-member', 'contacts', 'pubkey', 'ping', 'ping-remote', 'contact-invite', 'contact-list', 'contact-add', 'contact-info', 'action-issue', 'exit']
-
+  const autoComplete = ['help', 'info', 'member-of', 'member-of-confirm', 'member-list', 'credential', 'credential-member', 'pubkey', 'ping', 'ping-admin', 'ping-remote', 'room', 'rooms', 'room-add', 'room-info', 'action-issue', 'exit']
   term.cyan('lorena# ')
-  const input = await term.inputField({ history: history, autoComplete: autoComplete, autoCompleteMenu: true }).promise
-  term('\n')
-
-  if (connected === false & ['ping', 'ping-remote', 'contact-invite', 'contact-list', 'contact-add', 'contact-info', 'action-issue'].includes(input)) {
-    term('You are not connected\n')
-  } else {
+  term.inputField({ history: history, autoComplete: autoComplete, autoCompleteMenu: true }).promise
+    .then(async (input) => {
+      await runCommand(input, autoComplete, lorena, wallet)
+      terminal(lorena, wallet)
+    })
+}
+/*
     switch (input) {
-      case 'help':
-        term.gray('actions :\n')
-        console.log(autoComplete)
-        break
-      case 'info':
-        term.gray('info :\n')
-        console.log(wallet.info)
-        break
-      case 'did':
-        term.gray('DID :\n')
-        console.log(wallet.info.did)
-        break
-      case 'new-did':
-        payload = {}
-        term.cyan('Create a new Identity')
-        term.gray('\nConnection String :')
-        payload.connString = await term.inputField().promise
-        term.gray('\nSecurity Code :')
-        payload.securityCode = await term.inputField().promise
-
-        term.cyan('\nOpen connection')
-        await lorena.newClient(payload.connString, payload.securityCode, username)
-        // Connect
-        term.cyan('\nConnecting to Matrix')
-        await lorena.connect()
-
-        // Do the handshake with the server
-        term.cyan('\nHandshake : add contact')
-        term.cyan('\n')
-        // await lorena.handshake()
-        term.cyan('\nUpdating Storage...\n')
-        await lorena.lock(password)
-        break
-      case 'credential':
-        term.gray('Credentials :\n')
-        console.log(wallet.data.credentials['0'] ? wallet.data.credentials['0'] : 'empty')
-        break
-      case 'credential-member':
-        term.gray('Credentials :\n')
-        console.log(wallet.data.credentials['0'] ? wallet.data.credentials['0'].credentialSubject.member : 'empty')
-        break
-      case 'contacts':
-        term.gray('Contacts :\n')
-        console.log(wallet.data.contacts)
-        break
-      case 'pubkey':
-        term.gray('Public Key :\n')
-        console.log(wallet.info.keyPair[wallet.info.username].keypair.public_key)
-        break
-      case 'ping':
-      case 'recipe-list':
-        list = await callRecipe(lorena, input)
-        console.log(list)
-        break
       case 'ping-remote':
       case 'contact-info':
         term.gray('DID : ')
         payload = await term.inputField().promise
         term('\n')
-        list = await callRecipe(lorena, input, { did: payload })
-        console.log(list)
-        break
-      case 'contact-invite':
-        payload = {}
-        term.gray('First Name : ')
-        payload.givenName = await term.inputField().promise
-        term.gray('\nLast Name 1: ')
-        payload.familyName = await term.inputField().promise
-        term.gray('\nLast Name 2: ')
-        payload.additionalName = await term.inputField().promise
-        term.gray('\nDNI : ')
-        payload.propertyID = await term.inputField().promise
-        term.gray('\n')
-        list = await callRecipe(lorena, input, payload)
-        console.log(list)
-        break
-      case 'contact-list':
-        list = await callRecipe(lorena, input, { filter: 'all' })
-        console.log(list)
-        break
-      case 'contact-handshake':
-        term.gray('handshake...')
-        await lorena.handshake()
-        term('^+done^\n')
-        break
-      case 'contact-add':
-        payload = {}
-        term.gray('DID : ')
-        payload.did = await term.inputField().promise
-        term.gray('\nmatrix : ')
-        payload.matrix = await term.inputField().promise
-        term.gray('\n')
-        await lorena.createConnection(payload.matrix, payload.did)
-        break
-      case 'member-of':
-        payload = {}
-        // Extra
-        term.gray('RoomID : ')
-        payload.roomId = await term.inputField().promise
-        term.gray('\nExtra :')
-        payload.extra = await term.inputField().promise
-        term.gray('\nRolename :')
-        payload.roleName = await term.inputField().promise
-        term.gray('\n')
-        await lorena.memberOf(payload.roomId, payload.roleName, payload.extra)
+        result = await callRecipe(lorena, input, { did: payload })
+        console.log(result.payload)
         break
       case 'credential-get':
         payload = {}
@@ -280,40 +203,22 @@ const terminal = async (lorena, wallet) => {
         term.gray('\n')
         await lorena.askCredential(payload.roomId, 'memberOf')
         break
-      case 'contact-del':
-        payload = {}
-        term.gray('RoomId : ')
-        payload = await term.inputField().promise
-        await lorena.deleteConnection(payload)
-        break
       case 'action-issue':
         payload = {}
         term.gray('ContactID : ')
         payload.contactId = await term.inputField().promise
         payload.subject = { name: 'Compra', description: 'Comprar en el Vendrell', location: 'Vendrell' }
         term('\n')
-        list = await callRecipe(lorena, 'action-issue', { contactId: payload.contactId, subject: payload.subject })
-        console.log(list)
+        result = await callRecipe(lorena, 'action-issue', { contactId: payload.contactId, subject: payload.subject })
+        console.log(result.payload)
         break
       case 'action-list':
-        list = await callRecipe(lorena, input, { filter: 'all' })
-        console.log(list)
+        result = await callRecipe(lorena, input, { filter: 'all' })
+        console.log(result.payload)
         break
-      case 'exit':
-      case 'quit':
-      case 'q':
-        if (lorena.wallet.changed === true) {
-          term.gray('\nChanges to the conf file')
-          term.gray('\npassword : ')
-          payload = await term.inputField().promise
-          await lorena.lock(payload)
-        }
-        process.exit()
       default:
         term.gray('Command "' + input + '" does not exist. For help type "help"\n')
-    }
   }
-  terminal(lorena, wallet)
-}
+  */
 
 main()
