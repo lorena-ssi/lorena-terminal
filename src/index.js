@@ -111,7 +111,11 @@ const runCommand = async (command, autoComplete, lorena, wallet) => {
       const did = await term.gray('DID : ').inputField().promise
       const matrix = await term.gray('\nmatrix : ').inputField().promise
       const created = await lorena.createConnection(matrix, did)
-      term('\n' + (created ? 'Successful' : 'Error') + '\n')
+      if (created) {
+        term(`\n Created room: ${created}\n`)
+      } else {
+        term('\nError\n')
+      }
     },
     'member-of': async () => { await lorena.memberOf(await term.gray('\nroomId : ').inputField().promise, await term.gray('\nExtra : ').inputField().promise, await term.gray('\nRolename : ').inputField().promise) },
     'member-of-confirm': async () => { term(await lorena.memberOfConfirm(await term.gray('\nroomId : ').inputField().promise, await term.gray('\nSecret code : ').inputField().promise)) },
@@ -152,7 +156,7 @@ const runCommand = async (command, autoComplete, lorena, wallet) => {
  */
 function terminal (lorena, wallet) {
   const history = []
-  const autoComplete = ['help', 'info', 'member-of', 'member-of-confirm', 'member-list', 'credential', 'credentials', 'credential-member', 'pubkey', 'ping', 'ping-admin', 'ping-remote', 'room', 'rooms', 'room-add', 'room-info', 'action-issue', 'exit']
+  const autoComplete = ['help', 'info', 'member-of', 'member-of-confirm', 'member-list', 'credential', 'credentials', 'credential-member', 'pubkey', 'ping', 'ping-admin', 'ping-remote', 'room', 'rooms', 'room-add', 'action-issue', 'exit']
   term.cyan('lorena# ')
   term.inputField({ history: history, autoComplete: autoComplete, autoCompleteMenu: true }).promise
     .then(async (input) => {

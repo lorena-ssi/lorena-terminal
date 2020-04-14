@@ -24,8 +24,9 @@
   },
   "homepage": "https://github.com/lorena-ssi/terminal#readme",
   "dependencies": {
-    "@lorena-ssi/lorena-sdk": "^1.0.2",
-    "@lorena-ssi/wallet-lib": "^1.0.1",
+    "@lorena-ssi/credential-lib": "^1.0.10",
+    "@lorena-ssi/lorena-sdk": "^1.0.4",
+    "@lorena-ssi/wallet-lib": "^1.0.2",
     "inquirer": "^7.1.0",
     "terminal-kit": "^1.35.2"
   },
