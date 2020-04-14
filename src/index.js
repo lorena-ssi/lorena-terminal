@@ -1,9 +1,11 @@
 #!/usr/bin/env node
 const term = require('terminal-kit').terminal
 
+// const Lorena = require('../../lorena-sdk/src/index').default
 const Lorena = require('@lorena-ssi/lorena-sdk').default
 const Wallet = require('@lorena-ssi/wallet-lib').default
 const createWallet = require('./createWallet')
+const callRecipe = require('./callRecipe')
 
 let username = ''
 let password = ''
@@ -52,70 +54,42 @@ const main = async () => {
 
   // Someone's asking for a credential we have.
   lorena.on('message:credential-get', async (payload) => {
-    term('\n^Is asking for a credential ^')
-    term('\n^Share Credential (Y/N) ^\n')
+    term('\n^+Is asking for a credential ^')
+    term('\n^+Share Credential (Y/N) ^\n')
     const shareCredential = await term.yesOrNo({ yes: ['y', 'ENTER'], no: ['n'] }).promise
     if (shareCredential) {
       const cred = lorena.wallet.data.credentials[0]
       console.log(payload)
-      lorena.sendAction(payload.threadRef, payload.threadId, 'credential-get', 0, cred, payload.roomId)
+      lorena.sendAction('credential-ask', payload.threadId, 'credential-get', 0, cred, payload.roomId)
       term('\n^Credential Sent^\n')
+      term.cyan('lorena# ')
     }
   })
 
   // Someone sent a credential to us.
   lorena.on('message:credential-ask', async (payload) => {
-    term('\n^Received credential ^')
+    term('\n^+Received credential ^')
     console.log(payload)
+    term.cyan('lorena# ')
   })
 
   // We received a new Action.
   lorena.on('message:action-post', async (payload) => {
-    term('\n^Received action ^')
+    term('\n^+Received action ^')
     console.log(payload)
+    term.cyan('lorena# ')
   })
 
   // Someone¡'s contacting with us.
   lorena.on('contact-incoming', (payload) => {
     term('\n^+Contact invitation Incoming from ^' + payload + ' \n')
+    term.cyan('lorena# ')
   })
 
   // A new contact has been added (accepted).
   lorena.on('contact-added', (payload) => {
     term('\n^+Contact invitation Accepted from ^' + payload + ' \n')
-  })
-}
-
-/**
- * Calls a remote recipe.
- *
- * @param {object} lorena Lorena Object
- * @param {string} recipe Recipe Ref to be called
- * @param {object} payload Payload
- * @param {string} roomId roomId
- * @param {number} threadId recipe identifier
- * @returns {Promise} result of calling recipe
- */
-const callRecipe = (lorena, recipe, payload = {}, roomId = false, threadId = 0) => {
-  return new Promise((resolve) => {
-    const promise = (roomId === false) ? term.gray('\nRoomId : ').inputField().promise : Promise.resolve(roomId)
-    promise
-      .then((roomId) => { return lorena.getContact(roomId) })
-      .then((room) => {
-        if (room !== false) {
-          term.gray('\n' + recipe + '...')
-          lorena.callRecipe(recipe, payload, room.roomId, threadId)
-            .then((result) => {
-              const total = (Array.isArray(result.payload) ? result.payload.length : 1)
-              term('^+done^ - ' + total + ' results\n')
-              resolve({ roomId: room.roomId, payload: result.payload, threadId: result.threadId })
-            })
-            .catch((error) => {
-              term.gray(`^+${error.message}^\n`)
-              resolve(false)
-            })
-        } else resolve({ payload: ' - room not found\n' })
-      })
+    term.cyan('lorena# ')
   })
 }
 
@@ -127,7 +101,7 @@ const runCommand = async (command, autoComplete, lorena, wallet) => {
     did: () => term.gray('DID : ').white(wallet.info.did + '\n'),
     credential: () => console.log(wallet.data.credentials['0'] ? wallet.data.credentials['0'] : 'empty'),
     credentials: () => console.log(wallet.data.credentials ? wallet.data.credentials : 'empty'),
-    'credential-member': () => console.log(wallet.data.credentials['0'] ? wallet.data.credentials['0'].credentialSubject.member : 'empty'),
+    'credential-member': () => console.log(wallet.data.credentials['0'] ? wallet.data.credentials['0'].credentialSubject : 'empty'),
     rooms: () => console.log(wallet.data.contacts),
     room: async () => {
       const roomId = await term.gray('\nroomId : ').inputField().promise
@@ -146,6 +120,10 @@ const runCommand = async (command, autoComplete, lorena, wallet) => {
     'member-list': async () => { console.log((await callRecipe(lorena, 'member-list', { filter: 'all' })).payload) },
     ping: async () => { console.log((await callRecipe(lorena, 'ping')).payload) },
     'ping-admin': async () => { console.log((await callRecipe(lorena, 'ping-admin')).payload) },
+    'credential-get': async () => {
+      console.log((await callRecipe(lorena, 'credential-get', { credentialType: 'memberOf' })).payload)
+      // await lorena.askCredential(payload.roomId, 'memberOf')
+    },
     q: async () => {
       if (lorena.wallet.changed === true) {
         term.gray('\nChanges to the conf file\npassword : ')
@@ -176,7 +154,7 @@ const runCommand = async (command, autoComplete, lorena, wallet) => {
  */
 function terminal (lorena, wallet) {
   const history = []
-  const autoComplete = ['help', 'info', 'member-of', 'member-of-confirm', 'member-list', 'credential', 'credential-member', 'pubkey', 'ping', 'ping-admin', 'ping-remote', 'room', 'rooms', 'room-add', 'room-info', 'action-issue', 'exit']
+  const autoComplete = ['help', 'info', 'member-of', 'member-of-confirm', 'member-list', 'credential', 'credentials', 'credential-member', 'pubkey', 'ping', 'ping-admin', 'ping-remote', 'room', 'rooms', 'room-add', 'room-info', 'action-issue', 'exit']
   term.cyan('lorena# ')
   term.inputField({ history: history, autoComplete: autoComplete, autoCompleteMenu: true }).promise
     .then(async (input) => {
