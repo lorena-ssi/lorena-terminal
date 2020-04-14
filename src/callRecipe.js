@@ -21,7 +21,7 @@ const callRecipe = (lorena, recipe, payload = {}, roomId = false, threadId = 0) 
           lorena.callRecipe(recipe, payload, room.roomId, threadId)
             .then((result) => {
               const total = (Array.isArray(result.payload) ? result.payload.length : 1)
-              term('^+done^ - ' + total + ' results\n')
+              term(`^+done^ - ${total} results\n`)
               resolve({ roomId: room.roomId, payload: result.payload, threadId: result.threadId })
             })
             .catch((error) => {

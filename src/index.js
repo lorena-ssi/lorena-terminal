@@ -68,27 +68,25 @@ const main = async () => {
 
   // Someone sent a credential to us.
   lorena.on('message:credential-ask', async (payload) => {
-    term('\n^+Received credential ^')
-    console.log(payload)
+    term(`\n^+Received credential ^${payload}`)
     term.cyan('lorena# ')
   })
 
   // We received a new Action.
   lorena.on('message:action-post', async (payload) => {
-    term('\n^+Received action ^')
-    console.log(payload)
+    term(`\n^+Received action ^${payload}`)
     term.cyan('lorena# ')
   })
 
-  // Someone¡'s contacting with us.
+  // Someone's contacting us.
   lorena.on('contact-incoming', (payload) => {
-    term('\n^+Contact invitation Incoming from ^' + payload + ' \n')
+    term(`\n^+Contact invitation Incoming from ^${payload} \n`)
     term.cyan('lorena# ')
   })
 
   // A new contact has been added (accepted).
   lorena.on('contact-added', (payload) => {
-    term('\n^+Contact invitation Accepted from ^' + payload + ' \n')
+    term(`\n^+Contact invitation Accepted from ^${payload}\n`)
     term.cyan('lorena# ')
   })
 }
@@ -113,7 +111,7 @@ const runCommand = async (command, autoComplete, lorena, wallet) => {
       const did = await term.gray('DID : ').inputField().promise
       const matrix = await term.gray('\nmatrix : ').inputField().promise
       const created = await lorena.createConnection(matrix, did)
-      term('\n' + (created ? 'Successfull' : 'Error') + '\n')
+      term('\n' + (created ? 'Successful' : 'Error') + '\n')
     },
     'member-of': async () => { await lorena.memberOf(await term.gray('\nroomId : ').inputField().promise, await term.gray('\nExtra : ').inputField().promise, await term.gray('\nRolename : ').inputField().promise) },
     'member-of-confirm': async () => { term(await lorena.memberOfConfirm(await term.gray('\nroomId : ').inputField().promise, await term.gray('\nSecret code : ').inputField().promise)) },
@@ -132,7 +130,7 @@ const runCommand = async (command, autoComplete, lorena, wallet) => {
       term('\n^+Good bye!^\n\n')
       process.exit()
     },
-    default: () => term.gray('Command "' + command + '" does not exist. For help type "help"\n')
+    default: () => term.gray(`Command ${command} does not exist. For help type "help"\n`)
   }
 
   // return new Promise((resolve) => {
