@@ -92,6 +92,18 @@ const main = async () => {
 }
 
 const runCommand = async (command, autoComplete, lorena, wallet) => {
+  /**
+   * Shut down the terminal, prompting to save
+   */
+  const shutdown = async () => {
+    if (lorena.wallet.changed === true) {
+      term.gray('\nChanges to the conf file\npassword : ')
+      await lorena.lock(await term.inputField().promise)
+    }
+    term('\n^+Good bye!^\n\n')
+    process.exit()
+  }
+
   term('\n')
   const commands = {
     help: () => console.log(autoComplete),
@@ -126,26 +138,16 @@ const runCommand = async (command, autoComplete, lorena, wallet) => {
       console.log((await callRecipe(lorena, 'credential-get', { credentialType: 'memberOf' })).payload)
       // await lorena.askCredential(payload.roomId, 'memberOf')
     },
-    q: async () => {
-      if (lorena.wallet.changed === true) {
-        term.gray('\nChanges to the conf file\npassword : ')
-        await lorena.lock(await term.inputField().promise)
-      }
-      term('\n^+Good bye!^\n\n')
-      process.exit()
-    },
+    exit: shutdown,
+    q: shutdown,
     default: () => term.gray(`Command ${command} does not exist. For help type "help"\n`)
   }
 
-  // return new Promise((resolve) => {
-  // invoke it
   if (commands[command]) {
     await commands[command]()
   } else {
     await commands.default()
   }
-  // resolve()
-  // })
 }
 
 /**
