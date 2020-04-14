@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 const term = require('terminal-kit').terminal
 
-// const Lorena = require('../../lorena-sdk/src/index').default
-const Lorena = require('@lorena-ssi/lorena-sdk').default
+const Lorena = require('../../lorena-sdk/src/index').default
+// const Lorena = require('@lorena-ssi/lorena-sdk').default
 const Wallet = require('@lorena-ssi/wallet-lib').default
 const createWallet = require('./createWallet')
 const callRecipe = require('./callRecipe')
@@ -108,7 +108,7 @@ const runCommand = async (command, autoComplete, lorena, wallet) => {
       const room = await wallet.get('contacts', { roomId: roomId })
       console.log(room)
     },
-    pubkey: () => term.gray('Public Key :  : ').white(wallet.info.keyPair[wallet.info.username].keypair.public_key + '\n'),
+    pubkey: async () => term.gray('Public Key : ').white(wallet.info.keyPair[wallet.info.did].keypair.public_key + '\n'),
     'room-add': async () => {
       const did = await term.gray('DID : ').inputField().promise
       const matrix = await term.gray('\nmatrix : ').inputField().promise
