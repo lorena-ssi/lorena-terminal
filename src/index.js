@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 const term = require('terminal-kit').terminal
 
-const Lorena = require('../../lorena-sdk/src/index').default
-// const Lorena = require('@lorena-ssi/lorena-sdk').default
+// const Lorena = require('../../lorena-sdk/src/index').default
+const Lorena = require('@lorena-ssi/lorena-sdk').default
 const Wallet = require('@lorena-ssi/wallet-lib').default
 const createWallet = require('./createWallet')
 const callRecipe = require('./callRecipe')
