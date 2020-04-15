@@ -2,7 +2,7 @@ const term = require('terminal-kit').terminal
 const Credential = require('@lorena-ssi/credential-lib')
 
 /**
- * Creates anew wallet.
+ * Creates a new wallet.
  *
  * @param {object} lorena Lorena SDK
  * @param {object} wallet Identity Wallet

@@ -130,7 +130,7 @@ const runCommand = async (command, autoComplete, lorena, wallet) => {
       }
     },
     'member-of': async () => { await lorena.memberOf(await term.gray('\nroomId : ').inputField().promise, await term.gray('\nExtra : ').inputField().promise, await term.gray('\nRolename : ').inputField().promise) },
-    'member-of-confirm': async () => { term(await lorena.memberOfConfirm(await term.gray('\nroomId : ').inputField().promise, await term.gray('\nSecret code : ').inputField().promise)) },
+    'member-of-confirm': async () => { await lorena.memberOfConfirm(await term.gray('\nroomId : ').inputField().promise, await term.gray('\nSecret code : ').inputField().promise) },
     'member-list': async () => { console.log((await callRecipe(lorena, 'member-list', { filter: 'all' })).payload) },
     ping: async () => { console.log((await callRecipe(lorena, 'ping')).payload) },
     'ping-admin': async () => { console.log((await callRecipe(lorena, 'ping-admin')).payload) },
