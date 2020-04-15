@@ -92,6 +92,18 @@ const main = async () => {
 }
 
 const runCommand = async (command, autoComplete, lorena, wallet) => {
+  /**
+   * Shut down the terminal, prompting to save
+   */
+  const shutdown = async () => {
+    if (lorena.wallet.changed === true) {
+      term.gray('\nChanges to the conf file\npassword : ')
+      await lorena.lock(await term.inputField().promise)
+    }
+    term('\n^+Good bye!^\n\n')
+    process.exit()
+  }
+
   term('\n')
   const commands = {
     help: () => console.log(autoComplete),
@@ -118,7 +130,7 @@ const runCommand = async (command, autoComplete, lorena, wallet) => {
       }
     },
     'member-of': async () => { await lorena.memberOf(await term.gray('\nroomId : ').inputField().promise, await term.gray('\nExtra : ').inputField().promise, await term.gray('\nRolename : ').inputField().promise) },
-    'member-of-confirm': async () => { term(await lorena.memberOfConfirm(await term.gray('\nroomId : ').inputField().promise, await term.gray('\nSecret code : ').inputField().promise)) },
+    'member-of-confirm': async () => { await lorena.memberOfConfirm(await term.gray('\nroomId : ').inputField().promise, await term.gray('\nSecret code : ').inputField().promise) },
     'member-list': async () => { console.log((await callRecipe(lorena, 'member-list', { filter: 'all' })).payload) },
     ping: async () => { console.log((await callRecipe(lorena, 'ping')).payload) },
     'ping-admin': async () => { console.log((await callRecipe(lorena, 'ping-admin')).payload) },
@@ -128,31 +140,21 @@ const runCommand = async (command, autoComplete, lorena, wallet) => {
     },
     'action-issue': async () => {
       await callRecipe(lorena, 'action-issue', {
-        did : await term.gray('DID : ').inputField().promise,
-        action : await term.gray('Action : ').inputField().promise,
-        description : await term.gray('\nDescription : ').inputField().promise
+        did: await term.gray('DID : ').inputField().promise,
+        action: await term.gray('Action : ').inputField().promise,
+        description: await term.gray('\nDescription : ').inputField().promise
       })
     },
-    q: async () => {
-      if (lorena.wallet.changed === true) {
-        term.gray('\nChanges to the conf file\npassword : ')
-        await lorena.lock(await term.inputField().promise)
-      }
-      term('\n^+Good bye!^\n\n')
-      process.exit()
-    },
+    exit: shutdown,
+    q: shutdown,
     default: () => term.gray(`Command ${command} does not exist. For help type "help"\n`)
   }
 
-  // return new Promise((resolve) => {
-  // invoke it
   if (commands[command]) {
     await commands[command]()
   } else {
     await commands.default()
   }
-  // resolve()
-  // })
 }
 
 /**
