@@ -128,10 +128,16 @@ const runCommand = async (command, autoComplete, lorena, wallet) => {
     },
     'action-issue': async () => {
       await callRecipe(lorena, 'action-issue', {
+        did: 'did:lor:labtest:WjNWcFpqRkhWVXQ0TWxkRldqRTBWMUps',
+        action: 'la mama',
+        description: 'Fer trucada'
+      })
+
+      /*      await callRecipe(lorena, 'action-issue', {
         did : await term.gray('DID : ').inputField().promise,
         action : await term.gray('Action : ').inputField().promise,
         description : await term.gray('\nDescription : ').inputField().promise
-      })
+      }) */
     },
     q: async () => {
       if (lorena.wallet.changed === true) {
