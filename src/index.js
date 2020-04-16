@@ -10,10 +10,8 @@ const term = require('./term')
 const main = async () => {
   await term.banner('Lorena', 'An awesome framework for Self-Sovereign Identity')
   // Username & password.
-  // let username = await term.input('Username')
-  // let password = await term.input('Password')
-  const username = 'alex'
-  const password = 'nikola'
+  const username = await term.input('Username')
+  const password = await term.input('Password')
 
   // Open Wallet and connect to Lorena
   const wallet = new Wallet(username)
