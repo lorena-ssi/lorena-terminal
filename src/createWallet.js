@@ -9,10 +9,11 @@ const Credential = require('@lorena-ssi/credential-lib')
  * @param {string} password Password
  */
 const createWallet = async (lorena, wallet, password) => {
-  await lorena.initWallet('labtest')
+  const network = await term.input('Network (labdev)')
+  await lorena.initWallet(network)
 
   // Personal information
-  const person = new Credential.Person(wallet.info.did)
+  const person = new Credential.Person()
   person.fullName(
     await term.input('First Name'),
     await term.input('Last Name (1)'),
