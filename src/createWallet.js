@@ -29,7 +29,7 @@ const createWallet = async (lorena, wallet, password) => {
   location.neighborhood(await term.input('Neighborhood'))
   person.location(location)
 
-  // Savce wallet.
+  // Save wallet.
   term.info('Save Storage')
   lorena.personalData(person)
   await lorena.lock(password)
