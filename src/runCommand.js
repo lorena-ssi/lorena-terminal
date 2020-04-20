@@ -47,29 +47,25 @@ const runCommand = async (command, autoComplete, lorena, wallet) => {
       term.info(await lorena.memberOf(
         await term.input('roomId'),
         await term.input('Extra'),
-        await term.input('Rolename'))
-      )
+        await term.input('Rolename')))
     },
     'link-member-of-confirm': async () => {
       term.info(await lorena.memberOfConfirm(
         await term.input('roomId'),
-        await term.input('Secret code'))
-      )
+        await term.input('Secret code')))
     },
     'link-member-list': async () => { term.json((await callRecipe(lorena, 'member-list', { filter: 'all' })).payload) },
     'link-ping': async () => { term.info((await callRecipe(lorena, 'ping')).payload) },
     'link-ping-admin': async () => { term.info((await callRecipe(lorena, 'ping-admin')).payload) },
     'link-action-issue': async () => {
-      await callRecipe(lorena, 'action-issue', {
-        did: 'did:lor:labtest:WjNWcFpqRkhWVXQ0TWxkRldqRTBWMUps',
-        action: 'la mama',
-        description: 'Fer trucada'
-      })
-      /*      await callRecipe(lorena, 'action-issue', {
-          did : await term.gray('DID : ').inputField().promise,
-          action : await term.gray('Action : ').inputField().promise,
-          description : await term.gray('\nDescription : ').inputField().promise
-        }) */
+      term.json(await callRecipe(lorena, 'action-issue', {
+        contactId: await term.input('ContactId'),
+        action: await term.input('Task'),
+        description: await term.input('Description')
+      }))
+    },
+    'link-action-list': async () => {
+      term.json(await callRecipe(lorena, 'action-list', { filter: 'all' }))
     },
     exit: shutdown,
     q: shutdown,
