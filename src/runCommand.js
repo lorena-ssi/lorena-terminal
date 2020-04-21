@@ -14,6 +14,15 @@ const runCommand = async (command, autoComplete, lorena, wallet) => {
     process.exit()
   }
 
+  const getRoomId = async () => {
+    if (wallet.data.links.length === 1) {
+      term.info(`\nUsing the only existing room: ${wallet.data.links[0].roomId}\n`)
+      return wallet.data.links[0].roomId
+    } else {
+      return term.input('roomId')
+    }
+  }
+
   const commands = {
     help: () => term.array(autoComplete),
     info: () => term.json(wallet.info),
@@ -27,13 +36,11 @@ const runCommand = async (command, autoComplete, lorena, wallet) => {
     credentials: () => term.json(wallet.data.credentials ? wallet.data.credentials : {}),
     links: () => term.json(wallet.data.links),
     link: async () => {
-      const roomId = await term.input('roomId')
-      const link = await wallet.get('links', { roomId: roomId })
+      const link = await wallet.get('links', { roomId: await getRoomId() })
       term.json(link)
     },
     'link-pubkey': async () => {
-      const roomId = await term.input('roomId')
-      const link = await wallet.get('links', { roomId: roomId })
+      const link = await wallet.get('links', { roomId: await getRoomId() })
       term.info('Public Key ', link.keyPair[link.did].keypair.public_key)
     },
     'link-add': async () => {
@@ -45,31 +52,28 @@ const runCommand = async (command, autoComplete, lorena, wallet) => {
     },
     'link-member-of': async () => {
       term.info(await lorena.memberOf(
-        await term.input('roomId'),
+        await getRoomId(),
         await term.input('Extra'),
         await term.input('Rolename'))
       )
     },
     'link-member-of-confirm': async () => {
       term.info(await lorena.memberOfConfirm(
-        await term.input('roomId'),
+        await getRoomId(),
         await term.input('Secret code'))
       )
     },
-    'link-member-list': async () => { term.json((await callRecipe(lorena, 'member-list', { filter: 'all' })).payload) },
+    'link-member-list': async () => {
+      term.json((await callRecipe(lorena, 'member-list', { filter: 'all' }, await getRoomId())).payload)
+    },
     'link-ping': async () => { term.info((await callRecipe(lorena, 'ping')).payload) },
     'link-ping-admin': async () => { term.info((await callRecipe(lorena, 'ping-admin')).payload) },
     'link-action-issue': async () => {
       await callRecipe(lorena, 'action-issue', {
-        did: 'did:lor:labtest:WjNWcFpqRkhWVXQ0TWxkRldqRTBWMUps',
-        action: 'la mama',
-        description: 'Fer trucada'
+        did: await term.gray('DID : ').inputField().promise,
+        action: await term.gray('Action : ').inputField().promise,
+        description: await term.gray('\nDescription : ').inputField().promise
       })
-      /*      await callRecipe(lorena, 'action-issue', {
-          did : await term.gray('DID : ').inputField().promise,
-          action : await term.gray('Action : ').inputField().promise,
-          description : await term.gray('\nDescription : ').inputField().promise
-        }) */
     },
     exit: shutdown,
     q: shutdown,
