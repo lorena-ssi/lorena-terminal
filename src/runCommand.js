@@ -38,8 +38,8 @@ const runCommand = async (command, autoComplete, lorena, wallet) => {
     },
     'link-add': async () => {
       const created = await lorena.createConnection(
-        await term.input('DID (did:lor:labtest:12345)'),
-        await term.input('Matrix user (@user:labtest.matrix.lorena.tech)'))
+        await term.input('DID (did:lor:labtest:12345)')
+      )
       if (created) term.info('Created room', created)
       else term.error('\nError\n')
     },
