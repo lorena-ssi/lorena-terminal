@@ -19,7 +19,7 @@ const createWallet = async (lorena, wallet, password) => {
     await term.input('Last Name (1)'),
     await term.input('Last Name (2)'))
   person.nationalID(await term.input('DNI'), 'Documento Nacional de Identidad de España')
-  person.telephone(await term.input('nPhone number'))
+  person.telephone(await term.input('Phone number'))
   person.email(await term.input('Email'))
 
   // Location.
