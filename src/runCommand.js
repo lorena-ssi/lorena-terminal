@@ -63,7 +63,8 @@ const runCommand = async (command, autoComplete, lorena, wallet) => {
         action: await term.input('Task'),
         description: await term.input('Description'),
         startTime: await term.input('Start Time (2020-04-23 00:00:00)'),
-        endTime: await term.input('End Time (2020-04-25 00:00:00)')
+        endTime: await term.input('End Time (2020-04-25 00:00:00)'),
+        extra: {}
       }))
     },
     'link-action-update': async () => {
