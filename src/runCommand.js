@@ -38,15 +38,14 @@ const runCommand = async (command, autoComplete, lorena, wallet) => {
     },
     'link-add': async () => {
       const created = await lorena.createConnection(
-        await term.input('DID (did:lor:labtest:12345)'),
-        await term.input('Matrix user (@user:labtest.matrix.lorena.tech)'))
+        await term.input('DID (did:lor:labtest:12345)'))
       if (created) term.info('Created room', created)
       else term.error('\nError\n')
     },
     'link-member-of': async () => {
       term.info(await lorena.memberOf(
         await term.input('roomId'),
-        await term.input('Extra'),
+        {},
         await term.input('Rolename')))
     },
     'link-member-of-confirm': async () => {
@@ -61,7 +60,16 @@ const runCommand = async (command, autoComplete, lorena, wallet) => {
       term.json(await callRecipe(lorena, 'action-issue', {
         contactId: await term.input('ContactId'),
         action: await term.input('Task'),
-        description: await term.input('Description')
+        description: await term.input('Description'),
+        startTime: await term.input('Start Time (2020-04-23 00:00:00)'),
+        endTime: await term.input('End Time (2020-04-25 00:00:00)')
+      }))
+    },
+    'link-action-update': async () => {
+      term.json(await callRecipe(lorena, 'action-update', {
+        actionId: await term.input('ActionId'),
+        status: await term.input('Status (accepted/rejected/done)'),
+        extra: await term.input('Comments')
       }))
     },
     'link-action-list': async () => {

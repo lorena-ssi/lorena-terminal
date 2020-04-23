@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-
 const Lorena = require('@lorena-ssi/lorena-sdk').default
 const Wallet = require('@lorena-ssi/wallet-lib').default
 const createWallet = require('./createWallet')
@@ -61,8 +60,9 @@ function terminal (lorena, wallet) {
     'help', 'info',
     'link', 'link-pubkey',
     'links', 'link-add',
-    'link-member-of', 'link-member-of-confirm',
-    'link-ping', 'link-ping-admin', 'link-member-list',
+    'link-ping', 'link-ping-admin',
+    'link-member-of', 'link-member-of-confirm', 'link-member-list',
+    'link-action-issue', 'link-action-update',
     'credential', 'credentials',
     'action-issue', 'exit']
   term.lorena()
