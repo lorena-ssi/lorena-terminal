@@ -23,6 +23,10 @@ const runCommand = async (command, autoComplete, lorena, wallet) => {
     }
   }
 
+  const getLinkTerm = async () => (
+    await term.singleColumnMenu(wallet.data.links.concat(['None']))
+  ).selectedText
+
   const commands = {
     help: () => term.array(autoComplete),
     info: () => term.json(wallet.info),
@@ -36,8 +40,8 @@ const runCommand = async (command, autoComplete, lorena, wallet) => {
     credentials: () => term.json(wallet.data.credentials ? wallet.data.credentials : {}),
     links: () => term.json(wallet.data.links),
     link: async () => {
-      const link = await wallet.get('links', { roomId: await getRoomId() })
-      term.json(link)
+      const a = await getLinkTerm()
+      term.info(`Link selected '${a}'`)
     },
     'link-pubkey': async () => {
       const link = await wallet.get('links', { roomId: await getRoomId() })
