@@ -52,6 +52,9 @@ const term = {
   lorena: () => terminal.cyan('\nlor# '),
   message: (label, text = '') => {
     terminal('\n^+' + label + ' ^' + text)
+  },
+  singleColumnMenu: async (menuItems, options = undefined) => {
+    return await terminal.singleColumnMenu(menuItems, options).promise
   }
 }
 
