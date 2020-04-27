@@ -64,7 +64,7 @@ function terminal (lorena, wallet) {
     'link-member-of', 'link-member-of-confirm', 'link-member-list',
     'link-action-issue', 'link-action-update',
     'credential', 'credentials',
-    'action-issue', 'exit']
+    'action-issue', 'save', 'exit']
   term.lorena()
   term.inputField({ history, autoComplete, autoCompleteMenu: true })
     .then(async (input) => {
