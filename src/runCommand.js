@@ -3,13 +3,20 @@ const callRecipe = require('./callRecipe')
 
 const runCommand = async (command, autoComplete, lorena, wallet) => {
   /**
-   * Shut down the terminal, prompting to save
+   * Save changes to wallet
    */
-  const shutdown = async () => {
+  const save = async () => {
     if (lorena.wallet.changed === true) {
       term.message('\nSaving changes to the wallet')
       await lorena.lock(await term.input('password'))
     }
+  }
+
+  /**
+   * Shut down the terminal, prompting to save
+   */
+  const shutdown = async () => {
+    await save()
     term.message('Good bye!\n\n')
     process.exit()
   }
@@ -77,6 +84,7 @@ const runCommand = async (command, autoComplete, lorena, wallet) => {
     'link-action-list': async () => {
       term.json(await callRecipe(lorena, 'action-list', { filter: 'all' }))
     },
+    save: save,
     exit: shutdown,
     q: shutdown,
     default: () => term.info(`Command ${command} does not exist. For help type "help"`)
