@@ -1,13 +1,6 @@
 const terminal = require('terminal-kit').terminal
 const figlet = require('figlet')
 
-terminal.on('key', function (name, matches, data) {
-  if (name === 'CTRL_C') {
-    terminal.grabInput(false)
-    setTimeout(function () { process.exit() }, 100)
-  }
-})
-
 const term = {
   line: () => terminal('\n'),
   banner: (banner, text = '') => {
@@ -55,6 +48,39 @@ const term = {
   },
   singleColumnMenu: async (menuItems, options = undefined) => {
     return await terminal.singleColumnMenu(menuItems, options).promise
+  },
+  ctrlC: async (lorena) => {
+    terminal.on('key', async (name, matches, data) => {
+      if (name === 'CTRL_C') {
+        terminal.grabInput(false)
+        if (lorena.contTerminal === undefined) {
+          lorena.contTerminal = 1
+          // If something has changed in wallet
+          if (lorena.wallet.changed === true) {
+            const yn = await term.yesOrNo('\nDo you want to save your information?')
+            // If user wants to save changes
+            if (yn) {
+              // Saving changes
+              terminal.color256(82, '\npassword : ')
+              const psswd = await terminal.inputField({ echo: false }).promise
+              console.log('\npassword', psswd)
+              terminal.gray('Saving changes to the wallet\n')
+              await lorena.lock(psswd)
+            } else {
+              terminal.gray('\nChanges will not be save.')
+            }
+          } else {
+            terminal.gray('\nNo changes to save.')
+          }
+        } else {
+          terminal.gray('\nChanges will not be save.')
+          lorena.contTerminal = undefined
+        }
+        terminal.gray('\nLeaving...\n')
+        // Closing program
+        process.exit()
+      }
+    })
   }
 }
 

@@ -44,6 +44,7 @@ const main = async () => {
   lorena.on('error', (e) => term.error(e))
   lorena.on('ready', async () => {
     term.info('Lorena ^+connected^')
+    await term.ctrlC(lorena)
     terminal(lorena, wallet)
   })
 }
