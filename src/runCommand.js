@@ -95,7 +95,7 @@ const runCommand = async (command, autoComplete, lorena, wallet) => {
     try {
       await commands[command]()
     } catch (e) {
-      term.info('An error occured')
+      term.info('An error occurred')
       term.info(e)
     }
   } else {
