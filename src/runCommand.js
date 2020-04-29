@@ -7,9 +7,18 @@ const runCommand = async (command, autoComplete, lorena, wallet) => {
    */
   const save = async () => {
     if (lorena.wallet.changed === true) {
-      term.message('\nSaving changes to the wallet')
-      await lorena.lock(await term.input('password'))
-    }
+      term.info('Saving changes to the wallet')
+      while (true) {
+        const correct = await lorena.lock(await term.input('password'))
+        if (!correct) {
+          term.message('Incorrect password, try again')
+          term.info('\n')
+        } else {
+          term.info('Everything has been saved correctly')
+          break
+        }
+      }
+    } else term.info('Nothing to save')
   }
 
   /**
