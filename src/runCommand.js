@@ -59,8 +59,11 @@ const runCommand = async (command, autoComplete, lorena, wallet) => {
       term.info('Public Key ', link.keyPair[link.did].keypair.public_key)
     },
     'link-add': async () => {
+      const did = await term.input('DID (did:lor:labtest:12345)')
+      const alias = await term.input('ALIAS (myBossChuck)')
+      term.info(`Adding link ${did} with alias ${alias}`)
       const created = await lorena.createConnection(
-        await term.input('DID (did:lor:labtest:12345)')
+        did
       )
       if (created) term.info('Created room', created)
       else term.error('\nError\n')
