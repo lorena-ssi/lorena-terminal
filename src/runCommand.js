@@ -37,9 +37,6 @@ const runCommand = async (command, autoComplete, lorena, wallet) => {
       const issuer = await term.input('issuer')
       term.json(await wallet.get('credentials', { issuer: issuer }))
     },
-    'credential-get': async () => {
-      term.info((await callRecipe(lorena, 'credential-get', { credentialType: 'memberOf' })).payload)
-    },
     credentials: () => term.json(wallet.data.credentials ? wallet.data.credentials : {}),
     links: () => term.json(wallet.data.links),
     link: async () => {
@@ -98,6 +95,38 @@ const runCommand = async (command, autoComplete, lorena, wallet) => {
     },
     'link-action-list': async () => {
       term.json(await callRecipe(lorena, 'action-list', { filter: 'all' }))
+    },
+    'link-credential-add': async () => {
+      term.json((await callRecipe(lorena, 'credential-add', {
+        credential: {
+          title: await term.input('title'),
+          description: await term.input('description'),
+          url: await term.input('url'),
+          expiration: 'expires',
+          startDate: '2020-04-01',
+          endDate: '2020-07-31',
+          requirements: await term.input('requirements'),
+          type: 'certificate'
+        }
+      })).payload)
+    },
+    'link-credential-get': async () => {
+      term.json((await callRecipe(lorena, 'credential-get', { credentialId: await term.input('credentialId') })).payload)
+    },
+    'link-credential-issue': async () => {
+      term.json((await callRecipe(lorena, 'credential-issue', {
+        holder: {
+          credentialId: await term.input('credentialId'),
+          email: await term.input('email'),
+          name: await term.input('name')
+        }
+      })).payload)
+    },
+    'link-credential-issued': async () => {
+      term.json((await callRecipe(lorena, 'credential-issued', { credentialId: await term.input('credentialId') })).payload)
+    },
+    'link-credential-list': async () => {
+      term.json((await callRecipe(lorena, 'credential-list', { filter: 'certificate' })).payload)
     },
     save: save,
     exit: shutdown,
