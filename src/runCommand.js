@@ -40,13 +40,15 @@ const runCommand = async (command, autoComplete, lorena, wallet) => {
     credentials: () => term.json(wallet.data.credentials ? wallet.data.credentials : {}),
     links: () => term.json(wallet.data.links),
     link: async () => {
+      const none = 'None'
       const a = wallet.data.links.map((d) => d.alias)
       const selectedLink = (
         await term.singleColumnMenu(
-          a.concat(['None'])
+          a.concat([none])
         )
       ).selectedText
-      term.info('Selected link:\n' + selectedLink)
+      term.info('Selected link:' + selectedLink)
+      if (selectedLink === none) return
       const link = await wallet.get('links', { alias: selectedLink })
       term.json(link)
     },
