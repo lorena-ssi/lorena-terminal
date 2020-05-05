@@ -25,25 +25,14 @@ const main = async () => {
     await lorena.connect()
   } else process.exit()
 
-  // Someone's asking for a credential we have.
-  lorena.on('message:credential-get', async (payload) => {
-    term.message('Is asking for a credential')
-    if (await term.yesOrNo('Share Credential?')) {
-      const cred = lorena.wallet.data.credentials[0]
-      console.log(payload)
-      lorena.sendAction('credential-ask', payload.threadId, 'credential-get', 0, cred, payload.roomId)
-      term.message('Credential Sent')
-    }
-  })
-
   // React to messages received.
-  lorena.on('message:credential-ask', async (payload) => term.message('Received credential', payload))
   lorena.on('message:action-post', async (payload) => term.message('Received action', payload))
   lorena.on('contact-incoming', async (payload) => term.message('Contact invitation Incoming from', payload))
   lorena.on('contact-added', async (payload) => term.message('Contact invitation Accepted from', payload))
   lorena.on('error', (e) => term.error(e))
   lorena.on('ready', async () => {
     term.info('Lorena ^+connected^')
+    await term.ctrlC(lorena)
     terminal(lorena, wallet)
   })
 }
@@ -62,8 +51,9 @@ function terminal (lorena, wallet) {
     'links', 'link-add',
     'link-ping', 'link-ping-admin',
     'link-member-of', 'link-member-of-confirm', 'link-member-list',
-    'link-action-issue', 'link-action-update',
-    'credential', 'credentials',
+    'link-action-issue', 'link-action-update', 'link-credential-add',
+    'link-credential-get', 'link-credential-issue', 'link-credential-issued',
+    'link-credential-list', 'credential', 'credentials',
     'action-issue', 'save', 'exit']
   term.lorena()
   term.inputField({ history, autoComplete, autoCompleteMenu: true })
