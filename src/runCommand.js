@@ -63,7 +63,9 @@ const runCommand = async (command, autoComplete, lorena, wallet) => {
       const alias = await term.input('ALIAS (myBossChuck)')
       term.info(`Adding link ${did} with alias ${alias}`)
       const created = await lorena.createConnection(
-        did
+        did,
+        undefined,
+        { alias }
       )
       if (created) term.info('Created room', created)
       else term.error('\nError\n')
