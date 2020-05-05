@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 const Lorena = require('@lorena-ssi/lorena-sdk').default
 const Wallet = require('@lorena-ssi/wallet-lib').default
+
 const createWallet = require('./createWallet')
-const runCommand = require('./runCommand')
 const term = require('./term')
+const Commander = require('./Commander')
 
 // Main.
 const main = async () => {
@@ -33,34 +34,8 @@ const main = async () => {
   lorena.on('ready', async () => {
     term.info('Lorena ^+connected^')
     await term.ctrlC(lorena)
-    terminal(lorena, wallet)
+    const commander = new Commander(lorena)
+    commander.run()
   })
 }
-
-/**
- * Opens the terminal
- *
- * @param {object} lorena Lorena Object
- * @param {object} wallet Local information (wallet)
- */
-function terminal (lorena, wallet) {
-  const history = []
-  const autoComplete = [
-    'help', 'info',
-    'link', 'link-pubkey',
-    'links', 'link-add',
-    'link-ping', 'link-ping-admin',
-    'link-member-of', 'link-member-of-confirm', 'link-member-list',
-    'link-action-issue', 'link-action-update', 'link-credential-add',
-    'link-credential-get', 'link-credential-issue', 'link-credential-issued',
-    'link-credential-list', 'credential', 'credentials',
-    'action-issue', 'save', 'exit']
-  term.lorena()
-  term.inputField({ history, autoComplete, autoCompleteMenu: true })
-    .then(async (input) => {
-      await runCommand(input, autoComplete, lorena, wallet)
-      terminal(lorena, wallet)
-    })
-}
-
 main()
