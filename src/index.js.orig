@@ -27,7 +27,6 @@ const main = async () => {
   } else process.exit()
 
   // React to messages received.
-  lorena.on('message:credential-ask', async (payload) => term.message('Received credential', payload))
   lorena.on('message:action-post', async (payload) => term.message('Received action', payload))
   lorena.on('contact-incoming', async (payload) => term.message('Contact invitation Incoming from', payload))
   lorena.on('contact-added', async (payload) => term.message('Contact invitation Accepted from', payload))
@@ -35,9 +34,41 @@ const main = async () => {
   lorena.on('ready', async () => {
     term.info('Lorena ^+connected^')
     await term.ctrlC(lorena)
+<<<<<<< HEAD
     const commander = new Commander(lorena)
     commander.run()
   })
 }
+=======
+    terminal(lorena, wallet)
+  })
+}
 
+/**
+ * Opens the terminal
+ *
+ * @param {object} lorena Lorena Object
+ * @param {object} wallet Local information (wallet)
+ */
+function terminal (lorena, wallet) {
+  const history = []
+  const autoComplete = [
+    'help', 'info',
+    'link', 'link-pubkey',
+    'links', 'link-add',
+    'link-ping', 'link-ping-admin',
+    'link-member-of', 'link-member-of-confirm', 'link-member-list',
+    'link-action-issue', 'link-action-update', 'link-credential-add',
+    'link-credential-get', 'link-credential-issue', 'link-credential-issued',
+    'link-credential-list', 'credential', 'credentials',
+    'action-issue', 'save', 'exit']
+  term.lorena()
+  term.inputField({ history, autoComplete, autoCompleteMenu: true })
+    .then(async (input) => {
+      await runCommand(input, autoComplete, lorena, wallet)
+      terminal(lorena, wallet)
+    })
+}
+
+>>>>>>> 79bfb216e4fecec52344a43a6fab71c7ef81a3ee
 main()
