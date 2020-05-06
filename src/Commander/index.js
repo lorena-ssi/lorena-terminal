@@ -1,8 +1,8 @@
 const term = require('../term')
-const callRecipe = require('../callRecipe')
 
 module.exports = class Commander {
   constructor (lorena) {
+    this.activeLink = {}
     this.lorena = lorena
     this.history = []
     this.autoComplete = [
@@ -35,14 +35,22 @@ module.exports = class Commander {
           )
         ).selectedText
         term.info('Selected link:' + selectedLink)
-        if (selectedLink === none) return
+        if (selectedLink === none) {
+          this.activeLink = ''
+          return
+        }
         const link = await lorena.wallet.get('links', { alias: selectedLink })
+        this.activeLink = link
         term.json(link)
       },
       'link-pubkey': async () => {
-        const roomId = await term.input('roomId')
-        const link = await lorena.wallet.get('links', { roomId: roomId })
-        term.info('Public Key ', link.keyPair[link.did].keypair.public_key)
+        if (this.checkActiveLink()) {
+          if (this.activeLink.keyPair !== false) {
+            term.info('Public Key ', this.activeLink.keyPair[this.activeLink.did].keypair.public_key)
+          } else {
+            term.info('No Keypair in link `' + this.activeLink.alias + '`')
+          }
+        }
       },
       'link-add': async () => {
         const did = await term.input('DID (did:lor:labtest:12345)')
@@ -53,25 +61,39 @@ module.exports = class Commander {
           undefined,
           { alias }
         )
-        if (created) term.info('Created room', created)
-        else term.error('\nError\n')
+        if (created) {
+          term.info('Created room', created)
+          this.activeLink = await lorena.wallet.get('links', { alias })
+        } else {
+          term.error('\nError\n')
+        }
       },
       'link-member-of': async () => {
-        term.info(await lorena.memberOf(
-          await term.input('roomId'),
-          {},
-          await term.input('Rolename')))
+        if (this.checkActiveLink()) {
+          const rolename = await term.input('Rolename')
+          term.info(await lorena.memberOf(
+            this.activeLink.roomId,
+            {},
+            rolename
+          ))
+        }
       },
       'link-member-of-confirm': async () => {
-        term.info(await lorena.memberOfConfirm(
-          await term.input('roomId'),
-          await term.input('Secret code')))
+        if (this.checkActiveLink()) {
+          const secretCode = await term.input('Secret code')
+          term.info(await lorena.memberOfConfirm(
+            this.activeLink.roomId,
+            secretCode
+          ))
+        }
       },
-      'link-member-list': async () => { term.json((await callRecipe(lorena, 'member-list', { filter: 'all' })).payload) },
-      'link-ping': async () => { term.info((await callRecipe(lorena, 'ping')).payload) },
-      'link-ping-admin': async () => { term.info((await callRecipe(lorena, 'ping-admin')).payload) },
+      'link-member-list': async () => {
+        term.json((await this.callRecipe(lorena, 'member-list', { filter: 'all' })).payload)
+      },
+      'link-ping': async () => { term.info((await this.callRecipe(lorena, 'ping')).payload) },
+      'link-ping-admin': async () => { term.info((await this.callRecipe(lorena, 'ping-admin')).payload) },
       'link-action-issue': async () => {
-        term.json(await callRecipe(lorena, 'action-issue', {
+        term.json(await this.callRecipe(lorena, 'action-issue', {
           contactId: await term.input('ContactId'),
           action: await term.input('Task'),
           description: await term.input('Description'),
@@ -81,17 +103,17 @@ module.exports = class Commander {
         }))
       },
       'link-action-update': async () => {
-        term.json(await callRecipe(lorena, 'action-update', {
+        term.json(await this.callRecipe(lorena, 'action-update', {
           actionId: await term.input('ActionId'),
           status: await term.input('Status (accepted/rejected/done)'),
           extra: await term.input('Comments')
         }))
       },
       'link-action-list': async () => {
-        term.json(await callRecipe(lorena, 'action-list', { filter: 'all' }))
+        term.json(await this.callRecipe(lorena, 'action-list', { filter: 'all' }))
       },
       'link-credential-add': async () => {
-        term.json((await callRecipe(lorena, 'credential-add', {
+        term.json((await this.callRecipe(lorena, 'credential-add', {
           credential: {
             title: await term.input('title'),
             description: await term.input('description'),
@@ -105,10 +127,10 @@ module.exports = class Commander {
         })).payload)
       },
       'link-credential-get': async () => {
-        term.json((await callRecipe(lorena, 'credential-get', { credentialId: await term.input('credentialId') })).payload)
+        term.json((await this.callRecipe(lorena, 'credential-get', { credentialId: await term.input('credentialId') })).payload)
       },
       'link-credential-issue': async () => {
-        term.json((await callRecipe(lorena, 'credential-issue', {
+        term.json((await this.callRecipe(lorena, 'credential-issue', {
           holder: {
             credentialId: await term.input('credentialId'),
             email: await term.input('email'),
@@ -117,16 +139,25 @@ module.exports = class Commander {
         })).payload)
       },
       'link-credential-issued': async () => {
-        term.json((await callRecipe(lorena, 'credential-issued', { credentialId: await term.input('credentialId') })).payload)
+        term.json((await this.callRecipe(lorena, 'credential-issued', { credentialId: await term.input('credentialId') })).payload)
       },
       'link-credential-list': async () => {
-        term.json((await callRecipe(lorena, 'credential-list', { filter: 'certificate' })).payload)
+        term.json((await this.callRecipe(lorena, 'credential-list', { filter: 'certificate' })).payload)
       },
       save: this.save,
       exit: this.shutdown,
       q: this.shutdown,
       default: (command) => term.info(`Command ${command} does not exist. For help type "help"`)
     }
+  }
+
+  checkActiveLink () {
+    if (Object.entries(this.activeLink).length === 0) {
+      term.info('No active link')
+      term.info('Please, activate your link with the `link` command')
+      return false
+    }
+    return true
   }
 
   /**
@@ -174,9 +205,28 @@ module.exports = class Commander {
   async run () {
     const { history, autoComplete } = this
     while (true) {
-      term.lorena()
+      if (Object.entries(this.activeLink).length === 0) term.lorena('')
+      else term.lorena('(' + this.activeLink.alias + ')')
       const command = await term.inputField({ history, autoComplete, autoCompleteMenu: true })
       await this.runCommand(command)
+    }
+  }
+
+  async callRecipe (recipe, payload = {}, roomId = false, threadId = 0) {
+    if (this.checkActiveLink()) {
+      const room = await this.lorena.getContact(this.activeLink.roomId)
+      if (room !== false) {
+        term.info('\n' + JSON.stringify(recipe, null, 2) + '...')
+        try {
+          const rec = await this.lorena.callRecipe(recipe, payload, room.roomId, threadId)
+          const total = (Array.isArray(rec.payload) ? rec.payload.length : 1)
+          term(`^+done^ - ${total} results\n`)
+          return { roomId: room.roomId, payload: rec.payload, threadId: rec.threadId }
+        } catch (e) {
+          term.info('Error calling recipe')
+          return false
+        }
+      } else return { payload: ' - room not found\n' }
     }
   }
 }

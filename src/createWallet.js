@@ -5,10 +5,9 @@ const Credential = require('@lorena-ssi/credential-lib')
  * Creates a new wallet.
  *
  * @param {object} lorena Lorena SDK
- * @param {object} wallet Identity Wallet
  * @param {string} password Password
  */
-const createWallet = async (lorena, wallet, password) => {
+const createWallet = async (lorena, password) => {
   const network = await term.input('Network (labdev)')
   await lorena.initWallet(network)
 

@@ -14,15 +14,14 @@ const main = async () => {
   const password = await term.input('Password')
 
   // Open Wallet and connect to Lorena
-  const wallet = new Wallet(username)
-  const lorena = new Lorena(wallet, { debug: true, silent: true })
+  const lorena = new Lorena(new Wallet(username), { debug: true, silent: true })
 
   // Open the Wallet. Create a new one if no wallet available.
   if (await lorena.unlock(password)) {
     term.info('Wallet open')
     await lorena.connect()
   } else if (await term.yesOrNo('Wallet does not exist. Create a new wallet?')) {
-    await createWallet(lorena, wallet, password)
+    await createWallet(lorena, password)
     await lorena.connect()
   } else process.exit()
 
