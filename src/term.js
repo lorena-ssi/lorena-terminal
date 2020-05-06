@@ -42,7 +42,7 @@ const term = {
     console.log(JSON.stringify(json, null, 4))
   },
   error: (text) => { terminal.red(text + '\n') },
-  lorena: () => terminal.cyan('\nlor# '),
+  lorena: (env = '') => terminal.cyan('\nlor' + env + '# '),
   message: (label, text = '') => {
     terminal('\n^+' + label + ' ^' + text)
   },

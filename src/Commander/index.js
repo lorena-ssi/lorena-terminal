@@ -3,6 +3,7 @@ const callRecipe = require('../callRecipe')
 
 module.exports = class Commander {
   constructor (lorena) {
+    this.activeLink = {}
     this.lorena = lorena
     this.history = []
     this.autoComplete = [
@@ -35,8 +36,12 @@ module.exports = class Commander {
           )
         ).selectedText
         term.info('Selected link:' + selectedLink)
-        if (selectedLink === none) return
+        if (selectedLink === none) {
+          this.activeLink = ''
+          return
+        }
         const link = await lorena.wallet.get('links', { alias: selectedLink })
+        this.activeLink = link
         term.json(link)
       },
       'link-pubkey': async () => {
@@ -174,7 +179,8 @@ module.exports = class Commander {
   async run () {
     const { history, autoComplete } = this
     while (true) {
-      term.lorena()
+      if (Object.entries(this.activeLink).length === 0) term.lorena('')
+      else term.lorena('(' + this.activeLink.alias + ')')
       const command = await term.inputField({ history, autoComplete, autoCompleteMenu: true })
       await this.runCommand(command)
     }
