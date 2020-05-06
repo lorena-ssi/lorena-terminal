@@ -61,8 +61,12 @@ module.exports = class Commander {
           undefined,
           { alias }
         )
-        if (created) term.info('Created room', created)
-        else term.error('\nError\n')
+        if (created) {
+          term.info('Created room', created)
+          this.activeLink = await lorena.wallet.get('links', { alias })
+        } else {
+          term.error('\nError\n')
+        }
       },
       'link-member-of': async () => {
         if (this.checkActiveLink()) {
