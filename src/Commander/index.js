@@ -1,5 +1,4 @@
 const term = require('../term')
-const callRecipe = require('../callRecipe')
 
 module.exports = class Commander {
   constructor (lorena) {
@@ -69,7 +68,7 @@ module.exports = class Commander {
         if (this.checkActiveLink()) {
           const rolename = await term.input('Rolename')
           term.info(await lorena.memberOf(
-            this.activeLink,
+            this.activeLink.roomId,
             {},
             rolename
           ))
@@ -84,11 +83,13 @@ module.exports = class Commander {
           ))
         }
       },
-      'link-member-list': async () => { term.json((await callRecipe(lorena, 'member-list', { filter: 'all' })).payload) },
-      'link-ping': async () => { term.info((await callRecipe(lorena, 'ping')).payload) },
-      'link-ping-admin': async () => { term.info((await callRecipe(lorena, 'ping-admin')).payload) },
+      'link-member-list': async () => {
+        term.json((await this.callRecipe(lorena, 'member-list', { filter: 'all' })).payload)
+      },
+      'link-ping': async () => { term.info((await this.callRecipe(lorena, 'ping')).payload) },
+      'link-ping-admin': async () => { term.info((await this.callRecipe(lorena, 'ping-admin')).payload) },
       'link-action-issue': async () => {
-        term.json(await callRecipe(lorena, 'action-issue', {
+        term.json(await this.callRecipe(lorena, 'action-issue', {
           contactId: await term.input('ContactId'),
           action: await term.input('Task'),
           description: await term.input('Description'),
@@ -98,17 +99,17 @@ module.exports = class Commander {
         }))
       },
       'link-action-update': async () => {
-        term.json(await callRecipe(lorena, 'action-update', {
+        term.json(await this.callRecipe(lorena, 'action-update', {
           actionId: await term.input('ActionId'),
           status: await term.input('Status (accepted/rejected/done)'),
           extra: await term.input('Comments')
         }))
       },
       'link-action-list': async () => {
-        term.json(await callRecipe(lorena, 'action-list', { filter: 'all' }))
+        term.json(await this.callRecipe(lorena, 'action-list', { filter: 'all' }))
       },
       'link-credential-add': async () => {
-        term.json((await callRecipe(lorena, 'credential-add', {
+        term.json((await this.callRecipe(lorena, 'credential-add', {
           credential: {
             title: await term.input('title'),
             description: await term.input('description'),
@@ -122,10 +123,10 @@ module.exports = class Commander {
         })).payload)
       },
       'link-credential-get': async () => {
-        term.json((await callRecipe(lorena, 'credential-get', { credentialId: await term.input('credentialId') })).payload)
+        term.json((await this.callRecipe(lorena, 'credential-get', { credentialId: await term.input('credentialId') })).payload)
       },
       'link-credential-issue': async () => {
-        term.json((await callRecipe(lorena, 'credential-issue', {
+        term.json((await this.callRecipe(lorena, 'credential-issue', {
           holder: {
             credentialId: await term.input('credentialId'),
             email: await term.input('email'),
@@ -134,10 +135,10 @@ module.exports = class Commander {
         })).payload)
       },
       'link-credential-issued': async () => {
-        term.json((await callRecipe(lorena, 'credential-issued', { credentialId: await term.input('credentialId') })).payload)
+        term.json((await this.callRecipe(lorena, 'credential-issued', { credentialId: await term.input('credentialId') })).payload)
       },
       'link-credential-list': async () => {
-        term.json((await callRecipe(lorena, 'credential-list', { filter: 'certificate' })).payload)
+        term.json((await this.callRecipe(lorena, 'credential-list', { filter: 'certificate' })).payload)
       },
       save: this.save,
       exit: this.shutdown,
@@ -204,6 +205,24 @@ module.exports = class Commander {
       else term.lorena('(' + this.activeLink.alias + ')')
       const command = await term.inputField({ history, autoComplete, autoCompleteMenu: true })
       await this.runCommand(command)
+    }
+  }
+
+  async callRecipe (recipe, payload = {}, roomId = false, threadId = 0) {
+    if (this.checkActiveLink()) {
+      const room = await this.lorena.getContact(this.activeLink.roomId)
+      if (room !== false) {
+        term.info('\n' + JSON.stringify(recipe, null, 2) + '...')
+        try {
+          const rec = await this.lorena.callRecipe(recipe, payload, room.roomId, threadId)
+          const total = (Array.isArray(rec.payload) ? rec.payload.length : 1)
+          term(`^+done^ - ${total} results\n`)
+          return { roomId: room.roomId, payload: rec.payload, threadId: rec.threadId }
+        } catch (e) {
+          term.info('Error calling recipe')
+          return false
+        }
+      } else return { payload: ' - room not found\n' }
     }
   }
 }
