@@ -76,9 +76,13 @@ module.exports = class Commander {
         }
       },
       'link-member-of-confirm': async () => {
-        term.info(await lorena.memberOfConfirm(
-          await term.input('roomId'),
-          await term.input('Secret code')))
+        if (this.checkActiveLink()) {
+          const secretCode = await term.input('Secret code')
+          term.info(await lorena.memberOfConfirm(
+            this.activeLink.roomId,
+            secretCode
+          ))
+        }
       },
       'link-member-list': async () => { term.json((await callRecipe(lorena, 'member-list', { filter: 'all' })).payload) },
       'link-ping': async () => { term.info((await callRecipe(lorena, 'ping')).payload) },
