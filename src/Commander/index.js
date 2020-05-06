@@ -66,10 +66,14 @@ module.exports = class Commander {
         else term.error('\nError\n')
       },
       'link-member-of': async () => {
-        term.info(await lorena.memberOf(
-          await term.input('roomId'),
-          {},
-          await term.input('Rolename')))
+        if (this.checkActiveLink()) {
+          const rolename = await term.input('Rolename')
+          term.info(await lorena.memberOf(
+            this.activeLink,
+            {},
+            rolename
+          ))
+        }
       },
       'link-member-of-confirm': async () => {
         term.info(await lorena.memberOfConfirm(
