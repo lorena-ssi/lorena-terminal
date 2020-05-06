@@ -45,9 +45,13 @@ module.exports = class Commander {
         term.json(link)
       },
       'link-pubkey': async () => {
-        const roomId = await term.input('roomId')
-        const link = await lorena.wallet.get('links', { roomId: roomId })
-        term.info('Public Key ', link.keyPair[link.did].keypair.public_key)
+        if (this.checkActiveLink()) {
+          if (this.activeLink.keyPair !== false) {
+            term.info('Public Key ', this.activeLink.keyPair[this.activeLink.did].keypair.public_key)
+          } else {
+            term.info('No Keypair in link `' + this.activeLink.alias + '`')
+          }
+        }
       },
       'link-add': async () => {
         const did = await term.input('DID (did:lor:labtest:12345)')
@@ -132,6 +136,15 @@ module.exports = class Commander {
       q: this.shutdown,
       default: (command) => term.info(`Command ${command} does not exist. For help type "help"`)
     }
+  }
+
+  checkActiveLink () {
+    if (Object.entries(this.activeLink).length === 0) {
+      term.info('No active link')
+      term.info('Please, activate your link with the `link` command')
+      return false
+    }
+    return true
   }
 
   /**
