@@ -88,12 +88,12 @@ class Commander {
         }
       },
       'link-member-list': async () => {
-        term.json((await this.callRecipe(this.lorena, 'member-list', { filter: 'all' })).payload)
+        term.json((await this.callRecipe('member-list', { filter: 'all' })).payload)
       },
-      'link-ping': async () => { term.info((await this.callRecipe(this.lorena, 'ping')).payload) },
-      'link-ping-admin': async () => { term.info((await this.callRecipe(this.lorena, 'ping-admin')).payload) },
+      'link-ping': async () => { term.info((await this.callRecipe('ping')).payload) },
+      'link-ping-admin': async () => { term.info((await this.callRecipe('ping-admin')).payload) },
       'link-action-issue': async () => {
-        term.json(await this.callRecipe(this.lorena, 'action-issue', {
+        term.json(await this.callRecipe('action-issue', {
           contactId: await term.input('ContactId'),
           action: await term.input('Task'),
           description: await term.input('Description'),
@@ -103,17 +103,17 @@ class Commander {
         }))
       },
       'link-action-update': async () => {
-        term.json(await this.callRecipe(this.lorena, 'action-update', {
+        term.json(await this.callRecipe('action-update', {
           actionId: await term.input('ActionId'),
           status: await term.input('Status (accepted/rejected/done)'),
           extra: await term.input('Comments')
         }))
       },
       'link-action-list': async () => {
-        term.json(await this.callRecipe(this.lorena, 'action-list', { filter: 'all' }))
+        term.json(await this.callRecipe('action-list', { filter: 'all' }))
       },
       'link-credential-add': async () => {
-        term.json((await this.callRecipe(this.lorena, 'credential-add', {
+        term.json((await this.callRecipe('credential-add', {
           credential: {
             title: await term.input('title'),
             description: await term.input('description'),
@@ -127,10 +127,10 @@ class Commander {
         })).payload)
       },
       'link-credential-get': async () => {
-        term.json((await this.callRecipe(this.lorena, 'credential-get', { credentialId: await term.input('credentialId') })).payload)
+        term.json((await this.callRecipe('credential-get', { credentialId: await term.input('credentialId') })).payload)
       },
       'link-credential-issue': async () => {
-        term.json((await this.callRecipe(this.lorena, 'credential-issue', {
+        term.json((await this.callRecipe('credential-issue', {
           holder: {
             credentialId: await term.input('credentialId'),
             email: await term.input('email'),
@@ -139,10 +139,10 @@ class Commander {
         })).payload)
       },
       'link-credential-issued': async () => {
-        term.json((await this.callRecipe(this.lorena, 'credential-issued', { credentialId: await term.input('credentialId') })).payload)
+        term.json((await this.callRecipe('credential-issued', { credentialId: await term.input('credentialId') })).payload)
       },
       'link-credential-list': async () => {
-        term.json((await this.callRecipe(this.lorena, 'credential-list', { filter: 'certificate' })).payload)
+        term.json((await this.callRecipe('credential-list', { filter: 'certificate' })).payload)
       },
       save: this.save,
       exit: this.shutdown,
@@ -202,7 +202,22 @@ class Commander {
     }
   }
 
-  async run () {
+  async run (options = {}) {
+    // Check if is the first time and a link has been given
+    if (options.did === undefined || options.alias === undefined) {
+      this.activeLink = {}
+    } else {
+      // Create link
+      const created = await this.lorena.createConnection(options.did, undefined, { alias: options.alias })
+      if (created) {
+        term.info('Created room', created)
+        this.activeLink = await this.lorena.wallet.get('links', { alias: options.alias })
+        await this.save()
+      } else {
+        term.error('\nError\n')
+        this.activeLink = {}
+      }
+    }
     const { history, autoComplete } = this
     while (true) {
       if (Object.entries(this.activeLink).length === 0) term.lorena('')
