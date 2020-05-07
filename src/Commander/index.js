@@ -4,7 +4,7 @@ class Commander {
   constructor (lorena) {
     this.activeLink = {}
     this.lorena = lorena
-    this.history = ['']
+    this.history = []
     this.autoComplete = [
       'help', 'info',
       'link', 'link-pubkey',
