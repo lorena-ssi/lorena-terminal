@@ -12,8 +12,8 @@ const term = {
       })
     })
   },
-  input: async (label) => {
-    const result = await terminal.color256(82, label + ' : ').inputField().promise
+  input: async (label, options = {}) => {
+    const result = await terminal.color256(82, label + ' : ').inputField(options).promise
     terminal('\n')
     return result
   },
