@@ -223,6 +223,7 @@ class Commander {
       if (Object.entries(this.activeLink).length === 0) term.lorena('')
       else term.lorena('(' + this.activeLink.alias + ')')
       const command = await term.inputField({ history, autoComplete, autoCompleteMenu: true })
+      this.history = this.history.push(command)
       await this.runCommand(command)
     }
   }
