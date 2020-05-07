@@ -223,7 +223,7 @@ class Commander {
       if (Object.entries(this.activeLink).length === 0) term.lorena('')
       else term.lorena('(' + this.activeLink.alias + ')')
       const command = await term.inputField({ history, autoComplete, autoCompleteMenu: true })
-      this.history = this.history.push(command)
+      this.history.push(command)
       await this.runCommand(command)
     }
   }
@@ -236,10 +236,10 @@ class Commander {
         try {
           const rec = await this.lorena.callRecipe(recipe, payload, room.roomId, threadId)
           const total = (Array.isArray(rec.payload) ? rec.payload.length : 1)
-          term(`^+done^ - ${total} results\n`)
+          term.info(`^+done^ - ${total} results\n`)
           return { roomId: room.roomId, payload: rec.payload, threadId: rec.threadId }
         } catch (e) {
-          term.info('Error calling recipe')
+          term.info('Error calling recipe: ' + e)
           return false
         }
       } else return { payload: ' - room not found\n' }
