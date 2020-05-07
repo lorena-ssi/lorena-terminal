@@ -1,6 +1,6 @@
 const term = require('../term')
 
-module.exports = class Commander {
+class Commander {
   constructor (lorena) {
     this.activeLink = {}
     this.lorena = lorena
@@ -19,16 +19,16 @@ module.exports = class Commander {
 
     this.commands = {
       help: () => term.array(this.autoComplete),
-      info: () => term.json(lorena.wallet.info),
+      info: () => term.json(this.lorena.wallet.info),
       credential: async () => {
         const issuer = await term.input('issuer')
-        term.json(await lorena.wallet.get('credentials', { issuer: issuer }))
+        term.json(await this.lorena.wallet.get('credentials', { issuer: issuer }))
       },
-      credentials: () => term.json(lorena.wallet.data.credentials ? lorena.wallet.data.credentials : {}),
-      links: () => term.json(lorena.wallet.data.links),
+      credentials: () => term.json(this.lorena.wallet.data.credentials ? this.lorena.wallet.data.credentials : {}),
+      links: () => term.json(this.lorena.wallet.data.links),
       link: async () => {
         const none = 'None'
-        const a = lorena.wallet.data.links.map((d) => d.alias)
+        const a = this.lorena.wallet.data.links.map((d) => d.alias)
         const selectedLink = (
           await term.singleColumnMenu(
             a.concat([none])
@@ -39,7 +39,7 @@ module.exports = class Commander {
           this.activeLink = ''
           return
         }
-        const link = await lorena.wallet.get('links', { alias: selectedLink })
+        const link = await this.lorena.wallet.get('links', { alias: selectedLink })
         this.activeLink = link
         term.json(link)
       },
@@ -56,14 +56,14 @@ module.exports = class Commander {
         const did = await term.input('DID (did:lor:labtest:12345)')
         const alias = await term.input('ALIAS (defaultLink)')
         term.info(`Adding link ${did} with alias ${alias}`)
-        const created = await lorena.createConnection(
+        const created = await this.lorena.createConnection(
           did,
           undefined,
           { alias }
         )
         if (created) {
           term.info('Created room', created)
-          this.activeLink = await lorena.wallet.get('links', { alias })
+          this.activeLink = await this.lorena.wallet.get('links', { alias })
         } else {
           term.error('\nError\n')
         }
@@ -71,7 +71,7 @@ module.exports = class Commander {
       'link-member-of': async () => {
         if (this.checkActiveLink()) {
           const rolename = await term.input('Rolename')
-          term.info(await lorena.memberOf(
+          term.info(await this.lorena.memberOf(
             this.activeLink.roomId,
             {},
             rolename
@@ -81,19 +81,19 @@ module.exports = class Commander {
       'link-member-of-confirm': async () => {
         if (this.checkActiveLink()) {
           const secretCode = await term.input('Secret code')
-          term.info(await lorena.memberOfConfirm(
+          term.info(await this.lorena.memberOfConfirm(
             this.activeLink.roomId,
             secretCode
           ))
         }
       },
       'link-member-list': async () => {
-        term.json((await this.callRecipe(lorena, 'member-list', { filter: 'all' })).payload)
+        term.json((await this.callRecipe(this.lorena, 'member-list', { filter: 'all' })).payload)
       },
-      'link-ping': async () => { term.info((await this.callRecipe(lorena, 'ping')).payload) },
-      'link-ping-admin': async () => { term.info((await this.callRecipe(lorena, 'ping-admin')).payload) },
+      'link-ping': async () => { term.info((await this.callRecipe(this.lorena, 'ping')).payload) },
+      'link-ping-admin': async () => { term.info((await this.callRecipe(this.lorena, 'ping-admin')).payload) },
       'link-action-issue': async () => {
-        term.json(await this.callRecipe(lorena, 'action-issue', {
+        term.json(await this.callRecipe(this.lorena, 'action-issue', {
           contactId: await term.input('ContactId'),
           action: await term.input('Task'),
           description: await term.input('Description'),
@@ -103,17 +103,17 @@ module.exports = class Commander {
         }))
       },
       'link-action-update': async () => {
-        term.json(await this.callRecipe(lorena, 'action-update', {
+        term.json(await this.callRecipe(this.lorena, 'action-update', {
           actionId: await term.input('ActionId'),
           status: await term.input('Status (accepted/rejected/done)'),
           extra: await term.input('Comments')
         }))
       },
       'link-action-list': async () => {
-        term.json(await this.callRecipe(lorena, 'action-list', { filter: 'all' }))
+        term.json(await this.callRecipe(this.lorena, 'action-list', { filter: 'all' }))
       },
       'link-credential-add': async () => {
-        term.json((await this.callRecipe(lorena, 'credential-add', {
+        term.json((await this.callRecipe(this.lorena, 'credential-add', {
           credential: {
             title: await term.input('title'),
             description: await term.input('description'),
@@ -127,10 +127,10 @@ module.exports = class Commander {
         })).payload)
       },
       'link-credential-get': async () => {
-        term.json((await this.callRecipe(lorena, 'credential-get', { credentialId: await term.input('credentialId') })).payload)
+        term.json((await this.callRecipe(this.lorena, 'credential-get', { credentialId: await term.input('credentialId') })).payload)
       },
       'link-credential-issue': async () => {
-        term.json((await this.callRecipe(lorena, 'credential-issue', {
+        term.json((await this.callRecipe(this.lorena, 'credential-issue', {
           holder: {
             credentialId: await term.input('credentialId'),
             email: await term.input('email'),
@@ -139,10 +139,10 @@ module.exports = class Commander {
         })).payload)
       },
       'link-credential-issued': async () => {
-        term.json((await this.callRecipe(lorena, 'credential-issued', { credentialId: await term.input('credentialId') })).payload)
+        term.json((await this.callRecipe(this.lorena, 'credential-issued', { credentialId: await term.input('credentialId') })).payload)
       },
       'link-credential-list': async () => {
-        term.json((await this.callRecipe(lorena, 'credential-list', { filter: 'certificate' })).payload)
+        term.json((await this.callRecipe(this.lorena, 'credential-list', { filter: 'certificate' })).payload)
       },
       save: this.save,
       exit: this.shutdown,
@@ -192,7 +192,7 @@ module.exports = class Commander {
     term.line()
     if (this.commands[command]) {
       try {
-        await this.commands[command]()
+        await this.commands[command].bind(this)()
       } catch (e) {
         term.info('An error occurred')
         term.info(e)
@@ -230,3 +230,5 @@ module.exports = class Commander {
     }
   }
 }
+
+module.exports = Commander
