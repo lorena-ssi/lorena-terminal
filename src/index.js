@@ -31,6 +31,7 @@ const main = async () => {
     }
   } else {
     loginOrAdd = (await term.singleColumnMenu(['Login', 'Add Wallet'])).selectedText
+    term.message('\n')
   }
 
   let options = {}
