@@ -49,7 +49,7 @@ const term = {
   singleColumnMenu: async (menuItems, options = undefined) => {
     return await terminal.singleColumnMenu(menuItems, options).promise
   },
-  ctrlC: async (lorena) => {
+  ctrlC: async (lorena = {}) => {
     terminal.on('key', async (name, matches, data) => {
       if (name === 'CTRL_C') {
         terminal.grabInput(false)
@@ -83,5 +83,14 @@ const term = {
     })
   }
 }
+
+terminal.on('key', async (name, matches, data) => {
+  if (name === 'CTRL_D') {
+    terminal.grabInput(false)
+    terminal.gray('\nLeaving...\n')
+    // Closing program
+    process.exit()
+  }
+})
 
 module.exports = term
