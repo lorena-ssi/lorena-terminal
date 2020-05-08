@@ -1,5 +1,6 @@
 const terminal = require('terminal-kit').terminal
 const figlet = require('figlet')
+const util = require('util')
 
 const term = {
   line: () => terminal('\n'),
@@ -24,7 +25,7 @@ const term = {
     return result
   },
   inputField: async (params) => {
-    return await terminal.inputField(params).promise
+    return terminal.inputField(params).promise
   },
   array: (value) => {
     if (typeof value === 'object' && value.length > 0) {
@@ -39,7 +40,7 @@ const term = {
     terminal('\n')
   },
   json: (json = '') => {
-    console.log(JSON.stringify(json, null, 4))
+    console.log(util.inspect(json, { colors: true }))
   },
   error: (text) => { terminal.red(text + '\n') },
   lorena: (env = '') => terminal.cyan('\nlor' + env + '# '),
@@ -47,10 +48,10 @@ const term = {
     terminal('\n^+' + label + ' ^' + text)
   },
   singleColumnMenu: async (menuItems, options = undefined) => {
-    return await terminal.singleColumnMenu(menuItems, options).promise
+    return terminal.singleColumnMenu(menuItems, options).promise
   },
-  ctrlC: async (lorena) => {
-    terminal.on('key', async (name, matches, data) => {
+  ctrlC: (lorena) => {
+    terminal.on('key', async (name) => {
       if (name === 'CTRL_C') {
         terminal.grabInput(false)
         if (lorena.contTerminal === undefined) {

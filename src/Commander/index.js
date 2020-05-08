@@ -1,4 +1,5 @@
 const term = require('../term')
+const { exportWallet } = require('../manageWallet')
 
 class Commander {
   constructor (lorena) {
@@ -14,7 +15,7 @@ class Commander {
       'link-action-issue', 'link-action-update', 'link-credential-add',
       'link-credential-get', 'link-credential-issue', 'link-credential-issued',
       'link-credential-list', 'credential', 'credentials',
-      'action-issue', 'save', 'exit'
+      'action-issue', 'export', 'save', 'exit'
     ]
 
     this.commands = {
@@ -143,6 +144,14 @@ class Commander {
       },
       'link-credential-list': async () => {
         term.json((await this.callRecipe('credential-list', { filter: 'certificate' })).payload)
+      },
+      export: async () => {
+        const json = await this.lorena.wallet.toJSON()
+        const path = await term.input('path') || '.'
+        const filename = `${Object.keys(json)[0]}_wallet.json`
+        const completePath = path.endsWith('/') ? `${path}${filename}` : `${path}/${filename}`
+        exportWallet(completePath, JSON.stringify(json))
+        term.info(`Wallet exported to ${completePath}`)
       },
       save: this.save,
       exit: this.shutdown,

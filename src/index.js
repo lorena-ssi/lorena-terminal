@@ -3,18 +3,40 @@ const Lorena = require('@lorena-ssi/lorena-sdk').default
 const Wallet = require('@lorena-ssi/wallet-lib').default
 
 const createWallet = require('./createWallet')
+const { importWallet } = require('./manageWallet')
+
 const term = require('./term')
 const Commander = require('./Commander')
 
 // Main.
 const main = async () => {
   await term.banner('Lorena', 'An awesome framework for Self-Sovereign Identity')
-  // Username & password.
-  const username = await term.input('Username')
-  const password = await term.input('Password')
+  let username
+  let wallet
+
+  // Username
+  if (process.argv[2]) {
+    try {
+      const walletObject = await importWallet(process.argv[2])
+      username = Object.keys(walletObject)[0]
+      wallet = new Wallet(username)
+      await wallet.write('info', walletObject[username].info)
+      await wallet.write('data', walletObject[username].data)
+      term.info(`Using "${username}" as username\n`)
+    } catch (_) {
+      term.info(`Error reading "${process.argv[2]}\n`)
+    }
+  } else {
+    username = await term.input('Username')
+    wallet = new Wallet(username)
+  }
 
   // Open Wallet and connect to Lorena
-  const lorena = new Lorena(new Wallet(username), { debug: true, silent: true })
+  const lorena = new Lorena(wallet, { debug: true, silent: true })
+  term.ctrlC(lorena)
+
+  // Password
+  const password = await term.input('Password')
 
   let options = {}
   // Open the Wallet. Create a new one if no wallet available.
@@ -41,7 +63,7 @@ const main = async () => {
   lorena.on('error', (e) => term.error(e))
   lorena.on('ready', async () => {
     term.info('Lorena ^+connected^')
-    await term.ctrlC(lorena)
+
     const commander = new Commander(lorena)
     commander.run(options)
   })
