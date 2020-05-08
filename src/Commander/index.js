@@ -167,7 +167,7 @@ class Commander {
     if (this.lorena.wallet.changed === true) {
       term.info('Saving changes to the wallet')
       while (true) {
-        const correct = await this.lorena.lock(await term.input('password'))
+        const correct = await this.lorena.lock(await term.input('Password', { echoChar: true }))
         if (!correct) {
           term.message('Incorrect password, try again')
           term.info('\n')

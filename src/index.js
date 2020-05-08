@@ -11,7 +11,7 @@ const main = async () => {
   await term.banner('Lorena', 'An awesome framework for Self-Sovereign Identity')
   // Username & password.
   const username = await term.input('Username')
-  const password = await term.input('Password')
+  const password = await term.input('Password', { echoChar: true })
 
   // Open Wallet and connect to Lorena
   const lorena = new Lorena(new Wallet(username), { debug: true, silent: true })
