@@ -12,9 +12,12 @@ const Commander = require('./Commander')
 const main = async () => {
   await term.banner('Lorena', 'An awesome framework for Self-Sovereign Identity')
   let username
+  let password
   let wallet
+  let loginOrAdd
+  let lorena
 
-  // Username
+  // Username from import json
   if (process.argv[2]) {
     try {
       const walletObject = await importWallet(process.argv[2])
@@ -27,33 +30,43 @@ const main = async () => {
       term.info(`Error reading "${process.argv[2]}\n`)
     }
   } else {
-    username = await term.input('Username')
-    wallet = new Wallet(username)
+    loginOrAdd = (await term.singleColumnMenu(['Login', 'Add Wallet'])).selectedText
   }
 
-  // Open Wallet and connect to Lorena
-  const lorena = new Lorena(wallet, { debug: true, silent: true })
-  term.ctrlC(lorena)
-
-  // Password
-  const password = await term.input('Password')
-
   let options = {}
-  // Open the Wallet. Create a new one if no wallet available.
-  if (await lorena.unlock(password)) {
+  if (loginOrAdd === 'Login' || username) {
+    // If login but we already have username `autocomplete`
+    lorena = new Lorena(new Wallet(username || await term.input('Username')), { debug: true, silent: true })
+    term.ctrlC(lorena)
+    password = await term.input('Password', { echoChar: true })
+    while (!(await lorena.unlock(password))) {
+      term.error('Incorrect password or username')
+      password = await term.input('Password', { echoChar: true })
+    }
     term.info('Wallet open')
     await lorena.connect()
-  } else if (await term.yesOrNo('Wallet does not exist. Create a new wallet?')) {
-    // Creating first link connection
+  } else if (loginOrAdd === 'Add Wallet') {
+    const username = await term.input('Username')
+    lorena = new Lorena(new Wallet(username), { debug: true, silent: true })
+    term.ctrlC(lorena)
+
+    // Check if wallet already exist
+    if (await lorena.wallet.exist()) {
+      if (!await term.yesOrNo('Wallet already exist, override?')) process.exit()
+    }
+
+    const password = await term.input('Password', { echoChar: true })
+
     term.message('Please add information on your fist link:\n')
     const didLink = await term.input('DID (did:lor:labtest:12345)')
     const alias = await term.input('ALIAS (defaultLink)')
     options = { did: didLink, alias }
+
     // Creating wallet
     term.message(`Let's create your wallet in network ${didLink.split(':')[2]}!\n`)
     await createWallet(didLink.split(':')[2], lorena, password)
     await lorena.connect()
-  } else process.exit()
+  }
 
   // React to messages received.
   lorena.on('message:credential-ask', async (payload) => term.message('Received credential', payload))

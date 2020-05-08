@@ -13,8 +13,8 @@ const term = {
       })
     })
   },
-  input: async (label) => {
-    const result = await terminal.color256(82, label + ' : ').inputField().promise
+  input: async (label, options = {}) => {
+    const result = await terminal.color256(82, label + ' : ').inputField(options).promise
     terminal('\n')
     return result
   },
@@ -84,5 +84,14 @@ const term = {
     })
   }
 }
+
+terminal.on('key', async (name, matches, data) => {
+  if (name === 'CTRL_D') {
+    terminal.grabInput(false)
+    terminal.gray('\nLeaving...\n')
+    // Closing program
+    process.exit()
+  }
+})
 
 module.exports = term

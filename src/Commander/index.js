@@ -162,8 +162,8 @@ class Commander {
 
   checkActiveLink () {
     if (Object.entries(this.activeLink).length === 0) {
-      term.info('No active link')
-      term.info('Please, activate your link with the `link` command')
+      term.error('No active link')
+      term.message('Please, activate your link with the `link` command')
       return false
     }
     return true
@@ -176,9 +176,9 @@ class Commander {
     if (this.lorena.wallet.changed === true) {
       term.info('Saving changes to the wallet')
       while (true) {
-        const correct = await this.lorena.lock(await term.input('password'))
+        const correct = await this.lorena.lock(await term.input('Password', { echoChar: true }))
         if (!correct) {
-          term.message('Incorrect password, try again')
+          term.error('Incorrect password, try again')
           term.info('\n')
         } else {
           term.info('Everything has been saved correctly')
@@ -203,8 +203,8 @@ class Commander {
       try {
         await this.commands[command].bind(this)()
       } catch (e) {
-        term.info('An error occurred')
-        term.info(e)
+        term.error('An error occurred')
+        term.error(e)
       }
     } else {
       await this.commands.default()
@@ -248,7 +248,7 @@ class Commander {
           term.info(`^+done^ - ${total} results\n`)
           return { roomId: room.roomId, payload: rec.payload, threadId: rec.threadId }
         } catch (e) {
-          term.info('Error calling recipe: ' + e)
+          term.error('Error calling recipe: ' + e)
           return false
         }
       } else return { payload: ' - room not found\n' }
