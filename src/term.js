@@ -63,10 +63,10 @@ const term = {
             if (yn) {
               // Saving changes
               terminal.color256(82, '\npassword : ')
-              const psswd = await terminal.inputField({ echo: false }).promise
-              console.log('\npassword', psswd)
+              const password = await terminal.inputField({ echo: false }).promise
+              console.log('\npassword', password)
               terminal.gray('Saving changes to the wallet\n')
-              await lorena.lock(psswd)
+              await lorena.lock(password)
             } else {
               terminal.gray('\nChanges will not be save.')
             }
