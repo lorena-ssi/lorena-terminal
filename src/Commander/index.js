@@ -11,7 +11,7 @@ class Commander {
       'link', 'link-pubkey',
       'links', 'link-add',
       'link-ping', 'link-ping-admin',
-      'link-member-of', 'link-member-of-confirm', 'link-member-list',
+      'link-member-of', 'link-member-of-confirm', 'link-member-list', 'link-member-update', 'link-member-get',
       'link-action-issue', 'link-action-update', 'link-credential-add',
       'link-credential-get', 'link-credential-issue', 'link-credential-issued',
       'link-credential-list', 'credential', 'credentials',
@@ -90,6 +90,15 @@ class Commander {
       },
       'link-member-list': async () => {
         term.json((await this.callRecipe('member-list', { filter: 'all' })).payload)
+      },
+      'link-member-update': async () => {
+        term.json((await this.callRecipe('member-update', {
+          contactId: await term.input('ContactId'),
+          roleName: await term.input('roleName')
+        })).payload)
+      },
+      'link-member-get': async () => {
+        term.json((await this.callRecipe('member-get', {})).payload)
       },
       'link-ping': async () => { term.info((await this.callRecipe('ping')).payload) },
       'link-ping-admin': async () => { term.info((await this.callRecipe('ping-admin')).payload) },
