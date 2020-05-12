@@ -14,7 +14,7 @@ class Commander {
       'link-member-of', 'link-member-of-confirm', 'link-member-list', 'link-member-update', 'link-member-get',
       'link-action-issue', 'link-action-update', 'link-credential-add',
       'link-credential-get', 'link-credential-issue', 'link-credential-issued',
-      'link-credential-list', 'credential', 'credentials',
+      'link-credential-list', 'link-credential-verify', 'credential', 'credentials',
       'action-issue', 'export', 'save', 'exit'
     ]
 
@@ -24,6 +24,9 @@ class Commander {
       credential: async () => {
         const issuer = await term.input('issuer')
         term.json(await this.lorena.wallet.get('credentials', { issuer: issuer }))
+      },
+      'credential-verify': async () => {
+        term.json(await this.lorena.validateCertificate(await term.input('JSON')))
       },
       credentials: () => term.json(this.lorena.wallet.data.credentials ? this.lorena.wallet.data.credentials : {}),
       links: () => term.json(this.lorena.wallet.data.links),
