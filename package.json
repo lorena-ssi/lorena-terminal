@@ -24,9 +24,9 @@
   },
   "homepage": "https://github.com/lorena-ssi/terminal#readme",
   "dependencies": {
-    "@lorena-ssi/credential-lib": "^1.1.2",
-    "@lorena-ssi/lorena-sdk": "^1.3.3",
-    "@lorena-ssi/wallet-lib": "^1.1.5",
+    "@lorena-ssi/credential-lib": "^1.1.3",
+    "@lorena-ssi/lorena-sdk": "^1.4.3",
+    "@lorena-ssi/wallet-lib": "^1.1.6",
     "figlet": "^1.4.0",
     "inquirer": "^7.1.0",
     "terminal-kit": "^1.35.2"
@@ -40,7 +40,7 @@
     "eslint-config-standard": "^14.1.1",
     "eslint-plugin-chai-friendly": "^0.6.0",
     "eslint-plugin-import": "^2.20.2",
-    "eslint-plugin-jsdoc": "^25.2.0",
+    "eslint-plugin-jsdoc": "^25.4.1",
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-promise": "^4.2.1",
     "eslint-plugin-standard": "^4.0.1",
