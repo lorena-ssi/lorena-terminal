@@ -147,7 +147,8 @@ class Commander {
           holder: {
             credentialId: await term.input('credentialId'),
             email: await term.input('email'),
-            name: await term.input('name')
+            name: await term.input('name'),
+            contactId: await term.input('contactId (empty for none)') || undefined
           }
         })).payload)
       },
