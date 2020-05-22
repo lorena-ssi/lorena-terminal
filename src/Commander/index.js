@@ -14,7 +14,7 @@ class Commander {
       'link-member-of', 'link-member-of-confirm', 'link-member-list', 'link-member-update', 'link-member-get',
       'link-action-issue', 'link-action-update', 'link-credential-add',
       'link-credential-get', 'link-credential-issue', 'link-credential-issued',
-      'link-credential-list', 'link-credential-verify', 'credential', 'credentials',
+      'link-credential-list', 'credential', 'credential-verify', ':credentials',
       'action-issue', 'export', 'save', 'exit'
     ]
 
