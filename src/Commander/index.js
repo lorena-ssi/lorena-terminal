@@ -76,7 +76,7 @@ class Commander {
         if (this.checkActiveLink()) {
           const rolename = await term.input('Rolename')
           term.info(await this.lorena.memberOf(
-            this.activeLink.roomId,
+            this.activeLink.linkId,
             {},
             rolename
           ))
@@ -86,7 +86,7 @@ class Commander {
         if (this.checkActiveLink()) {
           const secretCode = await term.input('Secret code')
           term.info(await this.lorena.memberOfConfirm(
-            this.activeLink.roomId,
+            this.activeLink.linkId,
             secretCode
           ))
         }
@@ -252,19 +252,16 @@ class Commander {
 
   async callRecipe (recipe, payload = {}, roomId = false, threadId = 0) {
     if (this.checkActiveLink()) {
-      const room = await this.lorena.getContact(this.activeLink.roomId)
-      if (room !== false) {
-        term.info('\n' + JSON.stringify(recipe, null, 2) + '...')
-        try {
-          const rec = await this.lorena.callRecipe(recipe, payload, room.roomId, threadId)
-          const total = (Array.isArray(rec.payload) ? rec.payload.length : 1)
-          term.info(`^+done^ - ${total} results\n`)
-          return { roomId: room.roomId, payload: rec.payload, threadId: rec.threadId }
-        } catch (e) {
-          term.error('Error calling recipe: ' + e)
-          return false
-        }
-      } else return { payload: ' - room not found\n' }
+      term.info('\n' + JSON.stringify(recipe, null, 2) + '...')
+      try {
+        const rec = await this.lorena.callRecipe(recipe, payload, this.activeLink.roomId, threadId)
+        const total = (Array.isArray(rec.payload) ? rec.payload.length : 1)
+        term.info(`^+done^ - ${total} results\n`)
+        return { roomId: this.activeLink.roomId, payload: rec.payload, threadId: rec.threadId }
+      } catch (e) {
+        term.error('Error calling recipe: ' + e)
+        return false
+      }
     }
   }
 }
